@@ -278,58 +278,37 @@
 
 <script>
 // ---------- Crossword data ----------
-// grid: null = blocked cell, letter = expected answer
-const GRID_LETTERS = [
-  [null,null,null,null,'M',null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
-  [null,null,null,null,'E',null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
-  [null,null,null,null,'J',null,null,null,null,null,null,null,null,null,'L',null,null,null,null,null],
-  [null,null,null,'S','A','L','A','H',null,null,null,null,null,null,'O',null,null,null,null,null],
-  [null,null,null,'E',null,null,null,null,null,null,null,null,null,null,'W',null,null,null,null,null],
-  ['C','E','R','M','I','N',null,null,null,null,null,null,null,null,'O',null,null,null,null,null],
-  [null,null,null,'A',null,null,null,null,null,null,'S','O','A','L','N','Y','A',null,null,null],
-  [null,null,null,'N','O','L','E','H',null,null,null,null,null,null,'G',null,null,null,null,null],
-  [null,null,null,'G',null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
-  [null,null,null,'A',null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
-  [null,null,null,'T','O','L','O','N','G',null,null,null,null,null,null,null,null,null,null,null],
-  [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
-  [null,'K',null,null,null,null,null,'P','R','O','M','O','S','I',null,'K',null,null,null,null],
-  [null,'O',null,null,null,null,null,'A',null,null,null,null,null,null,null,'O',null,null,null,null],
-  [null,'P','A','S','A','R',null,'Y',null,null,null,null,null,null,null,'L',null,null,null,null],
-  [null,'I',null,null,null,null,null,'U',null,null,null,null,null,null,null,'E',null,null,null,null],
-  [null,null,null,null,null,null,null,'N',null,null,null,null,null,null,null,'G','I','T','A','R'],
-  [null,null,null,null,null,null,null,'G',null,null,null,null,null,null,null,'A',null,null,null,null],
-];
-const ROWS = GRID_LETTERS.length;
-const COLS = GRID_LETTERS[0].length;
-
+// Every word is placed so it crosses into the rest of the grid — one single
+// connected board, not separate islands. Only the clue list groups Mendatar/
+// Menurun and regular/bonus; the grid itself is all one piece.
 const WORDS = [
   { num:1, dir:'down', row:0, col:4, answer:'MEJA', example:true,
     clue:'CONTOH — Tempat naruh laptop kalau kerja di kantor, ada di atas…', bonus:false, points:0 },
-  { num:2, dir:'down', row:2, col:14, answer:'LOWONG', numberAtEnd:true,
-    clue:'BONUS — Kenapa suatu perusahaan bisa terus-terusan buka lowongan kerja padahal udah dari bulan lalu? Soalnya posisinya emang masih…', bonus:true, points:20 },
-  { num:3, dir:'down', row:3, col:3, answer:'SEMANGAT',
+  { num:2, dir:'down', row:3, col:3, answer:'SEMANGAT',
     clue:'Yang paling sering diucapkan atasan ke bawahannya waktu target belum tercapai, biasanya cuma kata…', bonus:false, points:2 },
-  { num:3, dir:'across', row:3, col:3, answer:'SALAH',
+  { num:2, dir:'across', row:3, col:3, answer:'SALAH',
     clue:'Koran disebut sebagai surat?', bonus:false, points:1 },
-  { num:4, dir:'across', row:5, col:0, answer:'CERMIN',
+  { num:3, dir:'across', row:5, col:0, answer:'CERMIN',
     clue:'Cermin kalau dilap, jadinya apa?', bonus:false, points:1 },
-  { num:5, dir:'across', row:6, col:10, answer:'SOALNYA',
-    clue:'BONUS — Psikotes sering bikin peserta deg-degan duluan sebelum mulai ngerjain. Kenapa? Karena banyak…', bonus:true, points:20 },
+  { num:4, dir:'across', row:5, col:8, answer:'PROMOSI',
+    clue:'BONUS — Kalau kerja udah lama dan kinerja bagus, yang paling ditunggu-tunggu biasanya naik jabatan alias…', bonus:true, points:20 },
+  { num:4, dir:'down', row:5, col:8, answer:'PAYUNG',
+    clue:'Kalau hujan tiba-tiba pas lagi di jalan, biar nggak basah kuyup biasanya orang buru-buru buka…', bonus:false, points:1 },
+  { num:5, dir:'down', row:7, col:0, answer:'KOPI',
+    clue:'Minuman item pahit yang diseduh air panas, biar melek pas ngantuk berat, namanya…', bonus:false, points:1 },
   { num:6, dir:'across', row:7, col:3, answer:'NOLEH',
     clue:'Seseorang yang memimpin sebuah desa, biasanya dipanggil pak…?', bonus:false, points:1 },
-  { num:7, dir:'across', row:10, col:3, answer:'TOLONG',
-    clue:'Biasa digunakan untuk menyalakan atau mematikan TV dan AC?', bonus:false, points:1 },
-  { num:8, dir:'down', row:12, col:1, answer:'KOPI',
-    clue:'Minuman item pahit yang diseduh air panas, biar melek pas ngantuk berat, namanya…', bonus:false, points:1 },
-  { num:9, dir:'across', row:12, col:7, answer:'PROMOSI',
-    clue:'BONUS — Kalau kerja udah lama dan kinerja bagus, yang paling ditunggu-tunggu biasanya naik jabatan alias…', bonus:true, points:20 },
-  { num:9, dir:'down', row:12, col:7, answer:'PAYUNG',
-    clue:'Kalau hujan tiba-tiba pas lagi di jalan, biar nggak basah kuyup biasanya orang buru-buru buka…', bonus:false, points:1 },
-  { num:10, dir:'down', row:12, col:15, answer:'KOLEGA',
-    clue:'BONUS — Istilah buat nyebut temen satu kantor yang tiap hari ketemu di meja sebelah…', bonus:true, points:20 },
-  { num:11, dir:'across', row:14, col:1, answer:'PASAR',
+  { num:7, dir:'across', row:9, col:0, answer:'PASAR',
     clue:'Tempat rame buat beli sayur, ikan, sampai baju, biasanya paling ramai pagi-pagi, namanya…', bonus:false, points:1 },
-  { num:12, dir:'across', row:16, col:15, answer:'GITAR',
+  { num:8, dir:'down', row:9, col:6, answer:'LOWONG', numberAtEnd:true,
+    clue:'BONUS — Kenapa suatu perusahaan bisa terus-terusan buka lowongan kerja padahal udah dari bulan lalu? Soalnya posisinya emang masih…', bonus:true, points:20 },
+  { num:9, dir:'across', row:10, col:3, answer:'TOLONG',
+    clue:'Biasa digunakan untuk menyalakan atau mematikan TV dan AC?', bonus:false, points:1 },
+  { num:10, dir:'down', row:12, col:3, answer:'KOLEGA',
+    clue:'BONUS — Istilah buat nyebut temen satu kantor yang tiap hari ketemu di meja sebelah…', bonus:true, points:20 },
+  { num:11, dir:'across', row:13, col:2, answer:'SOALNYA',
+    clue:'BONUS — Psikotes sering bikin peserta deg-degan duluan sebelum mulai ngerjain. Kenapa? Karena banyak…', bonus:true, points:20 },
+  { num:12, dir:'across', row:16, col:3, answer:'GITAR',
     clue:'Alat musik berdawai yang sering dipetik sambil nyanyi-nyanyi santai di teras, namanya…', bonus:false, points:1 },
 ];
 
@@ -340,6 +319,21 @@ WORDS.forEach(w=>{
   }
   w.cells = cells;
   w.solved = !!w.example;
+});
+
+// The filled/blocked grid is derived straight from WORDS — no hand-kept 2D
+// array to drift out of sync (and any real letter clash gets logged loudly).
+let ROWS = 0, COLS = 0;
+WORDS.forEach(w=> w.cells.forEach(c=>{ ROWS = Math.max(ROWS, c.r + 1); COLS = Math.max(COLS, c.c + 1); }));
+const GRID_LETTERS = Array.from({length: ROWS}, ()=> Array(COLS).fill(null));
+WORDS.forEach(w=>{
+  w.cells.forEach((c,i)=>{
+    const existing = GRID_LETTERS[c.r][c.c];
+    if(existing !== null && existing !== w.answer[i]){
+      console.error('Crossword letter conflict at', c.r, c.c, ':', existing, 'vs', w.answer[i], 'from', w.answer);
+    }
+    GRID_LETTERS[c.r][c.c] = w.answer[i];
+  });
 });
 
 // Cells belonging to the pre-solved example word (filled + locked + green from the start)
@@ -357,14 +351,14 @@ const GIVENS = {
   '5-2': 'R',   // CERMIN (huruf ke-3)
   '7-6': 'E',   // NOLEH (huruf ke-4)
   '10-6': 'O',  // TOLONG (huruf ke-4)
-  '2-14': 'L',  // LOWONG
-  '6-16': 'A',  // SOALNYA (huruf ke-7)
-  '13-1': 'O',  // KOPI
-  '12-10': 'M', // PROMOSI
-  '15-7': 'U',  // PAYUNG
-  '14-15': 'L', // KOLEGA
-  '14-3': 'S',  // PASAR
-  '16-17': 'T', // GITAR
+  '11-6': 'W',  // LOWONG (huruf ke-3)
+  '13-5': 'L',  // SOALNYA (huruf ke-4)
+  '8-0': 'O',   // KOPI (huruf ke-2)
+  '9-2': 'S',   // PASAR (huruf ke-3)
+  '7-8': 'Y',   // PAYUNG (huruf ke-3)
+  '5-11': 'M',  // PROMOSI (huruf ke-4)
+  '14-3': 'L',  // KOLEGA (huruf ke-3)
+  '16-5': 'T',  // GITAR (huruf ke-3)
 };
 
 // ---------- State ----------
