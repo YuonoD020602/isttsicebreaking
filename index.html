@@ -291,7 +291,7 @@ const COLS = GRID_LETTERS[0].length;
 const WORDS = [
   { num:1, dir:'down', row:0, col:4, answer:'MEJA', example:true,
     clue:'CONTOH — Tempat naruh laptop kalau kerja di kantor, ada di atas…', bonus:false, points:0 },
-  { num:2, dir:'down', row:2, col:14, answer:'LOWONG',
+  { num:2, dir:'down', row:2, col:14, answer:'LOWONG', numberAtEnd:true,
     clue:'BONUS — Kenapa suatu perusahaan bisa terus-terusan buka lowongan kerja padahal udah dari bulan lalu? Soalnya posisinya emang masih…', bonus:true, points:20 },
   { num:3, dir:'down', row:3, col:3, answer:'SEMANGAT',
     clue:'Yang paling sering diucapkan atasan ke bawahannya waktu target belum tercapai, biasanya cuma kata…', bonus:false, points:2 },
@@ -457,7 +457,10 @@ function buildGrid(){
 
   // figure out clue numbers per starting cell
   const numberAt = {};
-  WORDS.forEach(w=>{ numberAt[w.row+'-'+w.col] = w.num; });
+  WORDS.forEach(w=>{
+    const cell = w.numberAtEnd ? w.cells[w.cells.length-1] : {r:w.row, c:w.col};
+    numberAt[cell.r+'-'+cell.c] = w.num;
+  });
 
   for(let r=0;r<ROWS;r++){
     for(let c=0;c<COLS;c++){
