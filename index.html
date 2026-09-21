@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>TTS Cak Lontong — Teka-Teki Silang</title>
+<title>Teka-Teki Silang — Ice Breaking Training</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -21,6 +21,7 @@
     --green-bg:#D7F0E0;
     --red-bg:#F6D3CE;
     --line: rgba(234,200,115,0.18);
+    --cell-size: clamp(18px, min(3vw, 4.6vh), 40px);
     box-sizing:border-box;
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -62,9 +63,19 @@
   .team-pill.leading{border-color:var(--gold); box-shadow:0 0 0 1px var(--gold) inset;}
   .team-pill.buzzed{outline:2px solid var(--gold-bright); outline-offset:2px;}
 
-  main{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px 20px 48px;}
+  main{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px 20px 48px; min-height:0;}
   .screen{width:100%; max-width:960px; display:none; flex-direction:column; align-items:center; text-align:center;}
   .screen.active{display:flex;}
+
+  /* When the game grid is on screen and the device is landscape, lock everything into one viewport — no scrolling */
+  @media (orientation:landscape){
+    body:has(#screen-game.active){height:100vh; overflow:hidden;}
+    main:has(#screen-game.active){padding:10px 18px; justify-content:stretch; min-height:0;}
+    #screen-game.active{max-width:1500px; height:100%; min-height:0; justify-content:space-between;}
+    #screen-game .game-layout{flex-wrap:nowrap;}
+    #screen-game .grid-wrap{flex-shrink:0;}
+    #screen-game .clue-panel{flex:1 1 auto; max-width:640px; min-width:240px;}
+  }
 
   .eyebrow{font-size:13px; letter-spacing:.4px; color:var(--gold-bright); font-weight:700; margin-bottom:10px;}
   h1{font-family:'Fraunces', serif; font-weight:600; font-size:clamp(28px,4.6vw,48px); line-height:1.08; margin:0 0 14px;}
@@ -88,27 +99,29 @@
   .rule p{margin:0; font-size:14.5px; line-height:1.55; color:rgba(247,242,231,.85);}
 
   /* ---------- Game screen ---------- */
-  .buzz-section{width:100%; margin-top:24px;}
-  .buzz-label{font-size:13px; font-weight:700; color:rgba(247,242,231,.65); margin:0 0 10px;}
-  .buzz-row{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
-  .buzz-btn{padding:12px 24px; border-radius:999px; border:2px solid var(--line); background:var(--navy-card); color:var(--cream); font-family:'Manrope'; font-weight:800; font-size:14px; cursor:pointer; transition:.12s;}
+  .buzz-section{width:100%; margin-top:12px; flex-shrink:0;}
+  .buzz-label{font-size:12px; font-weight:700; color:rgba(247,242,231,.65); margin:0 0 6px;}
+  .buzz-row{display:flex; gap:8px; flex-wrap:wrap; justify-content:center;}
+  .buzz-btn{padding:9px 20px; border-radius:999px; border:2px solid var(--line); background:var(--navy-card); color:var(--cream); font-family:'Manrope'; font-weight:800; font-size:13px; cursor:pointer; transition:.12s;}
   .buzz-btn:hover{border-color:var(--gold-bright);}
   .buzz-btn.chosen{background:var(--gold); color:var(--navy-deep); border-color:var(--gold);}
   .buzz-btn.tried{opacity:.32; text-decoration:line-through; cursor:not-allowed;}
 
-  .game-layout{display:flex; gap:32px; width:100%; align-items:flex-start; justify-content:center; flex-wrap:wrap;}
+  .game-layout{display:flex; gap:20px; width:100%; align-items:stretch; justify-content:center; flex-wrap:wrap; flex:1; min-height:0;}
 
   .grid-wrap{
     display:inline-grid;
-    grid-template-columns: repeat(7, clamp(28px,3.6vw,46px));
-    grid-auto-rows: clamp(28px,3.6vw,46px);
+    grid-template-columns: repeat(7, var(--cell-size));
+    grid-auto-rows: var(--cell-size);
     gap:3px;
     background:var(--navy-deep);
     padding:4px;
     border-radius:10px;
     flex-shrink:0;
     max-width:100%;
-    overflow-x:auto;
+    max-height:100%;
+    align-self:center;
+    overflow:auto;
     scrollbar-width:thin;
   }
   .cell{position:relative; background:transparent; border-radius:4px;}
@@ -116,7 +129,7 @@
   .cell .num{position:absolute; top:1px; left:2px; font-size:8.5px; font-weight:800; color:#8a6a1e; font-family:'Manrope'; z-index:2; pointer-events:none;}
   .cell input{
     width:100%; height:100%; border:none; background:transparent; text-align:center;
-    font-family:'Fraunces', serif; font-weight:700; font-size:clamp(14px,2.6vw,21px); color:var(--ink);
+    font-family:'Fraunces', serif; font-weight:700; font-size:clamp(12px, 2.4vh, 21px); color:var(--ink);
     text-transform:uppercase; outline:none; caret-color:var(--gold);
   }
   .cell.active-word{background:#FBF0D2;}
@@ -131,12 +144,12 @@
   .cell.wrong{background:var(--red-bg);}
   .cell.wrong input{color:#a3392b;}
 
-  .clue-panel{width:100%; max-width:640px; text-align:left; display:grid; grid-template-columns:1fr 1fr; gap:0 20px; align-content:start;}
-  .clue-group{margin-bottom:18px; min-width:0;}
-  .clue-group h3{font-family:'Fraunces', serif; font-weight:600; font-size:15px; color:var(--gold-bright); margin:0 0 10px;}
+  .clue-panel{width:100%; max-width:580px; text-align:left; display:grid; grid-template-columns:1fr 1fr; gap:0 16px; align-content:start; min-height:0; overflow-y:auto; scrollbar-width:thin;}
+  .clue-group{margin-bottom:14px; min-width:0;}
+  .clue-group h3{font-family:'Fraunces', serif; font-weight:600; font-size:14px; color:var(--gold-bright); margin:0 0 8px;}
   .clue-item{
-    display:flex; gap:8px; padding:8px 10px; border-radius:10px; border:1px solid transparent;
-    cursor:pointer; font-size:12.5px; line-height:1.4; color:rgba(247,242,231,.85); margin-bottom:6px;
+    display:flex; gap:8px; padding:6px 9px; border-radius:10px; border:1px solid transparent;
+    cursor:pointer; font-size:11.5px; line-height:1.35; color:rgba(247,242,231,.85); margin-bottom:5px;
   }
   .clue-item:hover{background:rgba(234,200,115,.08);}
   .clue-item.active{background:var(--navy-card); border-color:var(--gold);}
@@ -145,14 +158,14 @@
   .clue-item.example{border-left:3px solid var(--green); padding-left:9px;}
   .clue-item .cnum{font-weight:800; color:var(--gold-bright); flex-shrink:0;}
 
-  .controls-row{display:flex; gap:12px; margin-top:26px; width:100%; justify-content:center; flex-wrap:wrap;}
-  .ctrl{padding:13px 26px; border-radius:12px; font-family:'Manrope'; font-weight:700; font-size:14.5px; cursor:pointer; border:1px solid var(--line); background:transparent; color:var(--cream);}
+  .controls-row{display:flex; gap:10px; margin-top:12px; width:100%; justify-content:center; flex-wrap:wrap; flex-shrink:0;}
+  .ctrl{padding:10px 22px; border-radius:12px; font-family:'Manrope'; font-weight:700; font-size:13.5px; cursor:pointer; border:1px solid var(--line); background:transparent; color:var(--cream);}
   .ctrl.primary{background:var(--gold); color:var(--navy-deep); border-color:var(--gold); font-weight:800;}
   .ctrl.finish{background:var(--navy-card);}
   .ctrl:disabled{opacity:.35; cursor:not-allowed;}
 
   .toast{
-    margin-top:16px; font-weight:700; font-size:14px; min-height:20px;
+    margin-top:8px; font-weight:700; font-size:13px; min-height:18px; flex-shrink:0;
   }
   .toast.ok{color:var(--green);}
   .toast.no{color:var(--coral);}
@@ -180,7 +193,7 @@
   <!-- SETUP -->
   <section class="screen active" id="screen-setup">
     <div class="eyebrow">Ice Breaking · Training Session</div>
-    <h1>TTS Cak&nbsp;Lontong</h1>
+    <h1>Teka-Teki Silang</h1>
     <p class="lede">Kali ini beneran teka-teki silang — satu grid, saling potong hurufnya, dan jawabannya diketik langsung di kotak.</p>
     <div class="setup-card">
       <div class="setup-row">
@@ -439,7 +452,7 @@ function buildBuzzRow(){
 function buildGrid(){
   const wrap = document.getElementById('gridWrap');
   wrap.innerHTML = '';
-  wrap.style.gridTemplateColumns = `repeat(${COLS}, clamp(32px,6.2vw,54px))`;
+  wrap.style.gridTemplateColumns = `repeat(${COLS}, var(--cell-size))`;
   inputs = Array.from({length:ROWS}, ()=>Array(COLS).fill(null));
 
   // figure out clue numbers per starting cell
