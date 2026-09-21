@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TTS Cak Lontong — Teka-Teki Silang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-deep:#0A1830;
+    --navy:#0F2244;
+    --navy-card:#14294F;
+    --gold:#D4AF52;
+    --gold-bright:#EAC873;
+    --cream:#F7F2E7;
+    --ink:#1C2A3A;
+    --coral:#E2725B;
+    --green:#2F8F5B;
+    --green-bg:#D7F0E0;
+    --red-bg:#F6D3CE;
+    --line: rgba(234,200,115,0.18);
+    box-sizing:border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-padding-top: env(safe-area-inset-top, 0px);}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1100px 600px at 15% -10%, rgba(234,200,115,0.10), transparent 60%),
+      radial-gradient(900px 500px at 100% 110%, rgba(234,200,115,0.07), transparent 55%),
+      var(--navy-deep);
+    color:var(--cream);
+    font-family:'Manrope', sans-serif;
+    min-height:100%;
+    display:flex;
+    flex-direction:column;
+    overflow-x:hidden;
+  }
+
+  .pillars{position:fixed; left:0; right:0; bottom:0; height:6px; display:flex; z-index:5; pointer-events:none;}
+  .pillars span{flex:1; background:var(--gold); opacity:.55;}
+  .pillars span:nth-child(even){opacity:.28;}
+
+  #scoreboard{
+    display:none; position:sticky; top:0; z-index:10;
+    padding:14px 20px calc(14px + env(safe-area-inset-top,0px));
+    padding-top:calc(14px + env(safe-area-inset-top,0px));
+    background:linear-gradient(180deg, var(--navy-deep) 75%, transparent);
+    backdrop-filter:blur(6px);
+  }
+  #scoreboard .rowwrap{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; max-width:1100px; margin:0 auto;}
+  .team-pill{display:flex; align-items:center; gap:10px; background:var(--navy-card); border:1px solid var(--line); border-radius:999px; padding:8px 18px 8px 8px; min-width:150px;}
+  .team-pill .dot{width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Fraunces', serif; font-weight:600; font-size:15px; color:var(--navy-deep); flex-shrink:0;}
+  .team-pill .info{display:flex; flex-direction:column; line-height:1.2;}
+  .team-pill .tname{font-size:12.5px; font-weight:700; letter-spacing:.2px;}
+  .team-pill .tscore{font-family:'Fraunces', serif; font-size:19px; font-weight:600; color:var(--gold-bright);}
+  .team-pill.leading{border-color:var(--gold); box-shadow:0 0 0 1px var(--gold) inset;}
+  .team-pill.buzzed{outline:2px solid var(--gold-bright); outline-offset:2px;}
+
+  main{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px 20px 48px;}
+  .screen{width:100%; max-width:960px; display:none; flex-direction:column; align-items:center; text-align:center;}
+  .screen.active{display:flex;}
+
+  .eyebrow{font-size:13px; letter-spacing:.4px; color:var(--gold-bright); font-weight:700; margin-bottom:10px;}
+  h1{font-family:'Fraunces', serif; font-weight:600; font-size:clamp(28px,4.6vw,48px); line-height:1.08; margin:0 0 14px;}
+  .lede{color:rgba(247,242,231,.72); font-size:16px; line-height:1.6; max-width:560px; margin:0 auto 30px;}
+
+  .setup-card{background:var(--navy-card); border:1px solid var(--line); border-radius:20px; padding:32px; width:100%; max-width:520px; text-align:left;}
+  .setup-row{margin-bottom:22px;}
+  .setup-row label{display:block; font-size:13px; font-weight:700; color:var(--gold-bright); margin-bottom:10px;}
+  .team-count-btns{display:flex; gap:10px;}
+  .count-btn{flex:1; padding:12px 0; border-radius:12px; border:1px solid var(--line); background:var(--navy); color:var(--cream); font-family:'Manrope'; font-weight:700; font-size:16px; cursor:pointer;}
+  .count-btn.selected{background:var(--gold); color:var(--navy-deep); border-color:var(--gold);}
+  .name-inputs{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .name-inputs input{width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:var(--navy); color:var(--cream); font-family:'Manrope'; font-size:15px;}
+  .name-inputs input:focus{outline:none; border-color:var(--gold);}
+  .big-btn{margin-top:8px; width:100%; padding:16px 0; border-radius:12px; border:none; background:var(--gold); color:var(--navy-deep); font-family:'Manrope'; font-weight:800; font-size:16px; cursor:pointer;}
+  .ghost-btn{margin-top:12px; background:transparent; border:1px solid var(--line); color:var(--cream); padding:12px 0; width:100%; border-radius:12px; font-family:'Manrope'; font-weight:700; font-size:14px; cursor:pointer;}
+
+  .rules-list{text-align:left; width:100%; max-width:640px; display:flex; flex-direction:column; gap:14px; margin-bottom:30px;}
+  .rule{display:flex; gap:14px; background:var(--navy-card); border:1px solid var(--line); border-radius:14px; padding:16px 18px; align-items:flex-start;}
+  .rule .num{font-family:'Fraunces', serif; font-weight:600; color:var(--gold-bright); font-size:22px; flex-shrink:0; width:28px;}
+  .rule p{margin:0; font-size:14.5px; line-height:1.55; color:rgba(247,242,231,.85);}
+
+  /* ---------- Game screen ---------- */
+  .buzz-section{width:100%; margin-top:24px;}
+  .buzz-label{font-size:13px; font-weight:700; color:rgba(247,242,231,.65); margin:0 0 10px;}
+  .buzz-row{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
+  .buzz-btn{padding:12px 24px; border-radius:999px; border:2px solid var(--line); background:var(--navy-card); color:var(--cream); font-family:'Manrope'; font-weight:800; font-size:14px; cursor:pointer; transition:.12s;}
+  .buzz-btn:hover{border-color:var(--gold-bright);}
+  .buzz-btn.chosen{background:var(--gold); color:var(--navy-deep); border-color:var(--gold);}
+  .buzz-btn.tried{opacity:.32; text-decoration:line-through; cursor:not-allowed;}
+
+  .game-layout{display:flex; gap:32px; width:100%; align-items:flex-start; justify-content:center; flex-wrap:wrap;}
+
+  .grid-wrap{
+    display:inline-grid;
+    grid-template-columns: repeat(7, clamp(28px,3.6vw,46px));
+    grid-auto-rows: clamp(28px,3.6vw,46px);
+    gap:3px;
+    background:var(--navy-deep);
+    padding:4px;
+    border-radius:10px;
+    flex-shrink:0;
+    max-width:100%;
+    overflow-x:auto;
+    scrollbar-width:thin;
+  }
+  .cell{position:relative; background:transparent; border-radius:4px;}
+  .cell.filled{background:var(--cream);}
+  .cell .num{position:absolute; top:1px; left:2px; font-size:8.5px; font-weight:800; color:#8a6a1e; font-family:'Manrope'; z-index:2; pointer-events:none;}
+  .cell input{
+    width:100%; height:100%; border:none; background:transparent; text-align:center;
+    font-family:'Fraunces', serif; font-weight:700; font-size:clamp(14px,2.6vw,21px); color:var(--ink);
+    text-transform:uppercase; outline:none; caret-color:var(--gold);
+  }
+  .cell.active-word{background:#FBF0D2;}
+  .cell.given{background:var(--gold-bright);}
+  .cell.given input{color:var(--navy-deep); font-weight:800;}
+  .cell.given .num{color:var(--navy-deep);}
+  .cell.example{background:var(--green-bg);}
+  .cell.example input{color:var(--green); font-weight:800;}
+  .cell.example .num{color:var(--green);}
+  .cell.correct{background:var(--green-bg);}
+  .cell.correct input{color:var(--green);}
+  .cell.wrong{background:var(--red-bg);}
+  .cell.wrong input{color:#a3392b;}
+
+  .clue-panel{width:100%; max-width:640px; text-align:left; display:grid; grid-template-columns:1fr 1fr; gap:0 20px; align-content:start;}
+  .clue-group{margin-bottom:18px; min-width:0;}
+  .clue-group h3{font-family:'Fraunces', serif; font-weight:600; font-size:15px; color:var(--gold-bright); margin:0 0 10px;}
+  .clue-item{
+    display:flex; gap:8px; padding:8px 10px; border-radius:10px; border:1px solid transparent;
+    cursor:pointer; font-size:12.5px; line-height:1.4; color:rgba(247,242,231,.85); margin-bottom:6px;
+  }
+  .clue-item:hover{background:rgba(234,200,115,.08);}
+  .clue-item.active{background:var(--navy-card); border-color:var(--gold);}
+  .clue-item.solved{opacity:.45; text-decoration:line-through;}
+  .clue-item.bonus{border-left:3px solid var(--coral); padding-left:9px;}
+  .clue-item.example{border-left:3px solid var(--green); padding-left:9px;}
+  .clue-item .cnum{font-weight:800; color:var(--gold-bright); flex-shrink:0;}
+
+  .controls-row{display:flex; gap:12px; margin-top:26px; width:100%; justify-content:center; flex-wrap:wrap;}
+  .ctrl{padding:13px 26px; border-radius:12px; font-family:'Manrope'; font-weight:700; font-size:14.5px; cursor:pointer; border:1px solid var(--line); background:transparent; color:var(--cream);}
+  .ctrl.primary{background:var(--gold); color:var(--navy-deep); border-color:var(--gold); font-weight:800;}
+  .ctrl.finish{background:var(--navy-card);}
+  .ctrl:disabled{opacity:.35; cursor:not-allowed;}
+
+  .toast{
+    margin-top:16px; font-weight:700; font-size:14px; min-height:20px;
+  }
+  .toast.ok{color:var(--green);}
+  .toast.no{color:var(--coral);}
+
+  .podium{display:flex; align-items:flex-end; gap:14px; justify-content:center; width:100%; margin:20px 0 8px;}
+  .pod{background:var(--navy-card); border:1px solid var(--line); border-top:3px solid var(--gold); border-radius:14px 14px 0 0; padding:20px 16px; text-align:center; flex:1; max-width:220px;}
+  .pod.first{border-top-color:var(--gold-bright); padding-top:34px; background:linear-gradient(180deg, rgba(234,200,115,.14), var(--navy-card));}
+  .pod .rank{font-family:'Fraunces', serif; font-size:13px; color:var(--gold-bright); font-weight:600; margin-bottom:6px;}
+  .pod .tname{font-weight:800; font-size:15px; margin-bottom:4px;}
+  .pod .tscore{font-family:'Fraunces', serif; font-size:26px; color:var(--gold-bright); font-weight:600;}
+
+  @media (max-width:640px){
+    .name-inputs{grid-template-columns:1fr;}
+    .game-layout{flex-direction:column; align-items:center;}
+    .clue-panel{grid-template-columns:1fr; max-width:100%;}
+  }
+</style>
+</head>
+<body>
+
+<div id="scoreboard"><div class="rowwrap" id="scoreboardRow"></div></div>
+
+<main>
+
+  <!-- SETUP -->
+  <section class="screen active" id="screen-setup">
+    <div class="eyebrow">Ice Breaking · Training Session</div>
+    <h1>TTS Cak&nbsp;Lontong</h1>
+    <p class="lede">Kali ini beneran teka-teki silang — satu grid, saling potong hurufnya, dan jawabannya diketik langsung di kotak.</p>
+    <div class="setup-card">
+      <div class="setup-row">
+        <label>Jumlah tim</label>
+        <div class="team-count-btns" id="countBtns">
+          <button class="count-btn" data-n="2">2 Tim</button>
+          <button class="count-btn selected" data-n="3">3 Tim</button>
+          <button class="count-btn" data-n="4">4 Tim</button>
+        </div>
+      </div>
+      <div class="setup-row">
+        <label>Nama tim</label>
+        <div class="name-inputs" id="nameInputs"></div>
+      </div>
+      <button class="big-btn" id="startBtn">Lanjut ke Aturan Main</button>
+    </div>
+  </section>
+
+  <!-- RULES -->
+  <section class="screen" id="screen-rules">
+    <div class="eyebrow">Sebelum Mulai</div>
+    <h1>Cara Mainnya</h1>
+    <div class="rules-list">
+      <div class="rule"><div class="num">1</div><p>Ada 1 grid TTS di layar dengan beberapa kata: <b>Mendatar</b> dan <b>Menurun</b>, saling potong di beberapa huruf. Kotak emas = <b>huruf kunci</b> gratis. Kotak hijau (MEJA) = <b>contoh</b> soal yang udah terisi duluan, biar kebayang cara bacanya.</p></div>
+      <div class="rule"><div class="num">2</div><p>Fasilitator baca satu soal dari daftar clue. Semua tim boleh mikir bareng dulu.</p></div>
+      <div class="rule"><div class="num">3</div><p>Begitu ada tim yang paling cepat angkat tangan / teriak, klik nama timnya di tombol <b>buzz</b> yang muncul di bawah grid.</p></div>
+      <div class="rule"><div class="num">4</div><p>Fasilitator ketik jawaban tim ke kotak grid, lalu klik <b>"Cek Jawaban"</b>. Benar → kotak hijau, poin masuk ke tim yang buzz.</p></div>
+      <div class="rule"><div class="num">5</div><p>Salah → tombol tim itu terkunci buat soal ini, tapi tim lain masih boleh <b>rebutan buzz</b> lagi untuk soal yang sama.</p></div>
+      <div class="rule"><div class="num">6</div><p>Soal <b>Bonus</b> taruhannya lebih tinggi: benar dapat <b>+20 poin</b>, tapi kalau salah malah kena <b>−25 poin</b>. Mikir dulu sebelum buzz!</p></div>
+    </div>
+    <button class="big-btn" id="beginGameBtn" style="max-width:340px;">Mulai Permainan</button>
+  </section>
+
+  <!-- GAME -->
+  <section class="screen" id="screen-game">
+    <div class="game-layout">
+      <div class="grid-wrap" id="gridWrap"></div>
+      <div class="clue-panel">
+        <div class="clue-group">
+          <h3>Mendatar</h3>
+          <div id="acrossList"></div>
+        </div>
+        <div class="clue-group">
+          <h3>Menurun</h3>
+          <div id="downList"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="buzz-section">
+      <p class="buzz-label">Tim yang buzz duluan:</p>
+      <div class="buzz-row" id="buzzRow"></div>
+    </div>
+
+    <div class="controls-row">
+      <button class="ctrl primary" id="checkBtn">Cek Jawaban</button>
+      <button class="ctrl" id="muteBtn">🔊 Musik</button>
+      <button class="ctrl finish" id="finishBtn">Selesai & Lihat Skor</button>
+    </div>
+    <div class="toast" id="toast"></div>
+  </section>
+
+  <!-- FINAL -->
+  <section class="screen" id="screen-final">
+    <div class="eyebrow">Selesai!</div>
+    <h1 id="finalHeadline">TTS Kelar</h1>
+    <p class="lede">Terima kasih sudah mikir keras bareng. Lanjut ke sesi training ya!</p>
+    <div class="podium" id="podium"></div>
+    <button class="ghost-btn" id="restartBtn" style="max-width:280px;">Main Ulang dari Awal</button>
+  </section>
+
+</main>
+
+<div class="pillars"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+<script>
+// ---------- Crossword data ----------
+// grid: null = blocked cell, letter = expected answer
+const GRID_LETTERS = [
+  [null,null,null,null,'M',null,null,null,null,null,null,null,null,null,null,null,null],
+  [null,null,null,null,'E',null,null,null,null,null,null,null,null,null,null,null,null],
+  [null,null,null,null,'J',null,null,null,null,null,null,null,null,null,'L',null,null],
+  [null,null,null,'S','A','L','A','H',null,null,null,null,null,null,'O',null,null],
+  [null,null,null,'E',null,null,null,null,null,null,null,null,null,null,'W',null,null],
+  ['C','E','R','M','I','N',null,null,null,null,null,null,null,null,'O',null,null],
+  [null,null,null,'A',null,null,null,null,null,null,'S','O','A','L','N','Y','A'],
+  [null,null,null,'N','O','L','E','H',null,null,null,null,null,null,'G',null,null],
+  [null,null,null,'G',null,null,null,null,null,null,null,null,null,null,null,null,null],
+  [null,null,null,'A',null,null,null,null,null,null,null,null,null,null,null,null,null],
+  [null,null,null,'T','O','L','O','N','G',null,null,null,null,null,null,null,null],
+];
+const ROWS = GRID_LETTERS.length;
+const COLS = GRID_LETTERS[0].length;
+
+const WORDS = [
+  { num:1, dir:'down', row:0, col:4, answer:'MEJA', example:true,
+    clue:'CONTOH — Tempat naruh laptop kalau kerja di kantor, ada di atas…', bonus:false, points:0 },
+  { num:2, dir:'down', row:2, col:14, answer:'LOWONG',
+    clue:'BONUS — Kenapa suatu perusahaan bisa terus-terusan buka lowongan kerja padahal udah dari bulan lalu? Soalnya posisinya emang masih…', bonus:true, points:20 },
+  { num:3, dir:'down', row:3, col:3, answer:'SEMANGAT',
+    clue:'Yang paling sering diucapkan atasan ke bawahannya waktu target belum tercapai, biasanya cuma kata…', bonus:false, points:2 },
+  { num:3, dir:'across', row:3, col:3, answer:'SALAH',
+    clue:'Koran disebut sebagai surat?', bonus:false, points:1 },
+  { num:4, dir:'across', row:5, col:0, answer:'CERMIN',
+    clue:'Cermin kalau dilap, jadinya apa?', bonus:false, points:1 },
+  { num:5, dir:'across', row:6, col:10, answer:'SOALNYA',
+    clue:'BONUS — Psikotes sering bikin peserta deg-degan duluan sebelum mulai ngerjain. Kenapa? Karena banyak…', bonus:true, points:20 },
+  { num:6, dir:'across', row:7, col:3, answer:'NOLEH',
+    clue:'Seseorang yang memimpin sebuah desa, biasanya dipanggil pak…?', bonus:false, points:1 },
+  { num:7, dir:'across', row:10, col:3, answer:'TOLONG',
+    clue:'Biasa digunakan untuk menyalakan atau mematikan TV dan AC?', bonus:false, points:1 },
+];
+
+WORDS.forEach(w=>{
+  const cells=[];
+  for(let i=0;i<w.answer.length;i++){
+    cells.push(w.dir==='across' ? {r:w.row, c:w.col+i} : {r:w.row+i, c:w.col});
+  }
+  w.cells = cells;
+  w.solved = !!w.example;
+});
+
+// Cells belonging to the pre-solved example word (filled + locked + green from the start)
+const EXAMPLE_LETTERS = {};
+WORDS.forEach(w=>{
+  if(w.example){
+    w.cells.forEach((cell,i)=>{ EXAMPLE_LETTERS[cell.r+'-'+cell.c] = w.answer[i]; });
+  }
+});
+
+// One free "clue huruf" per word — a pre-filled letter to help teams get started
+const GIVENS = {
+  '3-4': 'A',   // SALAH
+  '8-3': 'G',   // SEMANGAT
+  '5-2': 'R',   // CERMIN (huruf ke-3)
+  '7-6': 'E',   // NOLEH (huruf ke-4)
+  '10-6': 'O',  // TOLONG (huruf ke-4)
+  '2-14': 'L',  // LOWONG
+  '6-16': 'A',  // SOALNYA (huruf ke-7)
+};
+
+// ---------- State ----------
+let teams = [];
+const colors = ['#EAC873', '#E2725B', '#5FA579', '#8FA7D6'];
+let teamCount = 3;
+let buzzedIdx = null;
+let selectedWordIdx = 0;
+let inputs = []; // inputs[r][c] -> {el, num}
+
+// ---------- Setup screen ----------
+const countBtns = document.getElementById('countBtns');
+const nameInputs = document.getElementById('nameInputs');
+
+function renderNameInputs(){
+  nameInputs.innerHTML = '';
+  for(let i=0;i<teamCount;i++){
+    const inp = document.createElement('input');
+    inp.placeholder = 'Nama Tim ' + (i+1);
+    inp.maxLength = 24;
+    inp.id = 'teamname-' + i;
+    nameInputs.appendChild(inp);
+  }
+}
+renderNameInputs();
+
+countBtns.addEventListener('click', (e)=>{
+  const btn = e.target.closest('.count-btn');
+  if(!btn) return;
+  document.querySelectorAll('.count-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  teamCount = parseInt(btn.dataset.n, 10);
+  renderNameInputs();
+});
+
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  teams = [];
+  for(let i=0;i<teamCount;i++){
+    const val = document.getElementById('teamname-'+i).value.trim();
+    teams.push({ name: val || ('Tim ' + (i+1)), score: 0, color: colors[i] });
+  }
+  buildScoreboard();
+  document.getElementById('scoreboard').style.display = 'block';
+  showScreen('screen-rules');
+});
+
+document.getElementById('beginGameBtn').addEventListener('click', ()=>{
+  buzzedIdx = null;
+  buildGrid();
+  buildClueList();
+  selectWord(0);
+  startBgMusic();
+  showScreen('screen-game');
+});
+
+document.getElementById('restartBtn').addEventListener('click', ()=>{
+  document.getElementById('scoreboard').style.display = 'none';
+  stopBgMusic();
+  WORDS.forEach(w=>{ if(!w.example) w.solved=false; });
+  showScreen('screen-setup');
+});
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ---------- Scoreboard ----------
+function buildScoreboard(){
+  const row = document.getElementById('scoreboardRow');
+  row.innerHTML = '';
+  teams.forEach((t, i)=>{
+    const pill = document.createElement('div');
+    pill.className = 'team-pill';
+    pill.id = 'pill-' + i;
+    pill.innerHTML = `<div class="dot" style="background:${t.color}">${t.name.charAt(0).toUpperCase()}</div>
+      <div class="info"><span class="tname">${t.name}</span><span class="tscore">${t.score}</span></div>`;
+    row.appendChild(pill);
+  });
+  refreshScoreboardVisuals();
+}
+function refreshScoreboardVisuals(){
+  const max = Math.max(...teams.map(t=>t.score));
+  teams.forEach((t,i)=>{
+    const pill = document.getElementById('pill-'+i);
+    if(!pill) return;
+    pill.querySelector('.tscore').textContent = t.score;
+    pill.classList.toggle('leading', max > 0 && t.score === max);
+    pill.classList.toggle('buzzed', i === buzzedIdx);
+  });
+}
+
+// ---------- Buzz (rebutan) ----------
+function buildBuzzRow(){
+  const row = document.getElementById('buzzRow');
+  if(!row) return;
+  row.innerHTML = '';
+  const w = WORDS[selectedWordIdx];
+  teams.forEach((t,i)=>{
+    const b = document.createElement('button');
+    b.className = 'buzz-btn';
+    b.textContent = t.name;
+    if(w.tried && w.tried.has(i)) b.classList.add('tried');
+    if(buzzedIdx === i) b.classList.add('chosen');
+    b.addEventListener('click', ()=>{
+      if(w.tried && w.tried.has(i)) return;
+      if(w.solved) return;
+      buzzedIdx = i;
+      buildBuzzRow();
+      refreshScoreboardVisuals();
+    });
+    row.appendChild(b);
+  });
+}
+
+// ---------- Grid ----------
+function buildGrid(){
+  const wrap = document.getElementById('gridWrap');
+  wrap.innerHTML = '';
+  wrap.style.gridTemplateColumns = `repeat(${COLS}, clamp(32px,6.2vw,54px))`;
+  inputs = Array.from({length:ROWS}, ()=>Array(COLS).fill(null));
+
+  // figure out clue numbers per starting cell
+  const numberAt = {};
+  WORDS.forEach(w=>{ numberAt[w.row+'-'+w.col] = w.num; });
+
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const cellDiv = document.createElement('div');
+      const letter = GRID_LETTERS[r][c];
+      if(letter === null){
+        cellDiv.className = 'cell';
+      } else {
+        cellDiv.className = 'cell filled';
+        const key = r+'-'+c;
+        if(numberAt[key]){
+          const num = document.createElement('span');
+          num.className = 'num';
+          num.textContent = numberAt[key];
+          cellDiv.appendChild(num);
+        }
+        const input = document.createElement('input');
+        input.maxLength = 1;
+        input.autocomplete = 'off';
+        input.dataset.r = r;
+        input.dataset.c = c;
+        const exampleLetter = EXAMPLE_LETTERS[key];
+        const givenLetter = GIVENS[key];
+        if(exampleLetter){
+          input.value = exampleLetter;
+          input.disabled = true;
+          cellDiv.classList.add('example');
+        } else if(givenLetter){
+          input.value = givenLetter;
+          input.disabled = true;
+          cellDiv.classList.add('given');
+        }
+        input.addEventListener('focus', ()=>onCellFocus(r,c));
+        input.addEventListener('input', (e)=>onCellInput(e,r,c));
+        input.addEventListener('keydown', (e)=>onCellKeydown(e,r,c));
+        cellDiv.appendChild(input);
+        inputs[r][c] = { el: input, given: !!givenLetter || !!exampleLetter };
+      }
+      wrap.appendChild(cellDiv);
+    }
+  }
+}
+
+function wordsAt(r,c){
+  return WORDS.map((w,i)=>({w,i})).filter(o=>o.w.cells.some(cell=>cell.r===r && cell.c===c));
+}
+
+function onCellFocus(r,c){
+  const candidates = wordsAt(r,c);
+  if(candidates.length === 0) return;
+  const stillValid = candidates.find(o=>o.i === selectedWordIdx);
+  if(!stillValid){
+    selectWord(candidates[0].i);
+  } else {
+    paintActiveWord();
+  }
+}
+
+function onCellInput(e,r,c){
+  let val = e.target.value.toUpperCase().replace(/[^A-Z]/g,'');
+  e.target.value = val.slice(-1);
+  const w = WORDS[selectedWordIdx];
+  if(!w) return;
+  const idx = w.cells.findIndex(cell=>cell.r===r && cell.c===c);
+  if(idx > -1 && e.target.value){
+    let next = idx + 1;
+    while(next < w.cells.length && inputs[w.cells[next].r][w.cells[next].c].given) next++;
+    if(next < w.cells.length){
+      const cell = w.cells[next];
+      inputs[cell.r][cell.c].el.focus();
+    }
+  }
+}
+
+function onCellKeydown(e,r,c){
+  if(e.key === 'Backspace' && !e.target.value){
+    const w = WORDS[selectedWordIdx];
+    if(!w) return;
+    const idx = w.cells.findIndex(cell=>cell.r===r && cell.c===c);
+    let prev = idx - 1;
+    while(prev >= 0 && inputs[w.cells[prev].r][w.cells[prev].c].given) prev--;
+    if(prev >= 0){
+      const cell = w.cells[prev];
+      inputs[cell.r][cell.c].el.focus();
+    }
+  }
+}
+
+function selectWord(i){
+  selectedWordIdx = i;
+  buzzedIdx = null;
+  const w = WORDS[i];
+  if(!w.tried) w.tried = new Set();
+  paintActiveWord();
+  updateClueHighlight();
+  buildBuzzRow();
+  refreshScoreboardVisuals();
+  const firstEmpty = w.cells.find(cell=>!inputs[cell.r][cell.c].el.value) || w.cells[0];
+  inputs[firstEmpty.r][firstEmpty.c].el.focus();
+}
+
+function paintActiveWord(){
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+    if(inputs[r][c]) inputs[r][c].el.parentElement.classList.remove('active-word');
+  }
+  const w = WORDS[selectedWordIdx];
+  if(!w) return;
+  w.cells.forEach(cell=>{
+    inputs[cell.r][cell.c].el.parentElement.classList.add('active-word');
+  });
+}
+
+// ---------- Clue list ----------
+function buildClueList(){
+  const acrossEl = document.getElementById('acrossList');
+  const downEl = document.getElementById('downList');
+  acrossEl.innerHTML = '';
+  downEl.innerHTML = '';
+  WORDS.forEach((w,i)=>{
+    const item = document.createElement('div');
+    item.className = 'clue-item' + (w.bonus ? ' bonus' : '') + (w.example ? ' example' : '');
+    item.id = 'clue-'+i;
+    item.innerHTML = `<span class="cnum">${w.num}.</span><span>${w.clue} <i>(${w.answer.length} huruf${w.bonus ? ', +'+w.points+' / −25 poin' : (w.points>1 ? ', +'+w.points+' poin' : '')})</i></span>`;
+    item.addEventListener('click', ()=>selectWord(i));
+    (w.dir==='across' ? acrossEl : downEl).appendChild(item);
+  });
+  updateClueHighlight();
+}
+
+function updateClueHighlight(){
+  WORDS.forEach((w,i)=>{
+    const item = document.getElementById('clue-'+i);
+    if(!item) return;
+    item.classList.toggle('active', i===selectedWordIdx);
+    item.classList.toggle('solved', w.solved && !w.example);
+  });
+}
+
+// ---------- Sound effects ----------
+let audioCtx = null;
+function getAudioCtx(){
+  if(!audioCtx){
+    try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(e){ return null; }
+  }
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function beep(freq, duration, type, delay, vol){
+  const ctx = getAudioCtx();
+  if(!ctx) return;
+  const t0 = ctx.currentTime + (delay || 0);
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type || 'sine';
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(vol || 0.16, t0);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(t0); osc.stop(t0 + duration + 0.02);
+}
+function playCorrectSound(){
+  beep(660, 0.12, 'sine', 0);
+  beep(880, 0.12, 'sine', 0.1);
+  beep(1320, 0.2, 'sine', 0.2);
+}
+function playWrongSound(){
+  beep(220, 0.26, 'sawtooth', 0, 0.14);
+  beep(150, 0.3, 'sawtooth', 0.12, 0.14);
+}
+
+// ---------- Background music (soft, synthesized — no external files) ----------
+let bgPlaying = false;
+let bgTimer = null;
+let bgStep = 0;
+const BG_PATTERN = [
+  { bass:110,    pluck:0   },
+  { bass:110,    pluck:440 },
+  { bass:130.81, pluck:0   },
+  { bass:110,    pluck:0   },
+  { bass:110,    pluck:0   },
+  { bass:98,     pluck:392 },
+  { bass:130.81, pluck:0   },
+  { bass:110,    pluck:523.25 },
+];
+const BG_STEP_MS = 300;
+
+function scheduleBgNote(){
+  if(!bgPlaying) return;
+  const ctx = getAudioCtx();
+  if(!ctx){ bgTimer = setTimeout(scheduleBgNote, BG_STEP_MS); return; }
+  const step = BG_PATTERN[bgStep % BG_PATTERN.length];
+  const t0 = ctx.currentTime;
+
+  const bassOsc = ctx.createOscillator();
+  const bassGain = ctx.createGain();
+  bassOsc.type = 'triangle';
+  bassOsc.frequency.value = step.bass;
+  bassGain.gain.setValueAtTime(0.045, t0);
+  bassGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.26);
+  bassOsc.connect(bassGain); bassGain.connect(ctx.destination);
+  bassOsc.start(t0); bassOsc.stop(t0 + 0.28);
+
+  if(step.pluck){
+    const pOsc = ctx.createOscillator();
+    const pGain = ctx.createGain();
+    pOsc.type = 'square';
+    pOsc.frequency.value = step.pluck;
+    pGain.gain.setValueAtTime(0.018, t0);
+    pGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.16);
+    pOsc.connect(pGain); pGain.connect(ctx.destination);
+    pOsc.start(t0); pOsc.stop(t0 + 0.17);
+  }
+
+  bgStep++;
+  bgTimer = setTimeout(scheduleBgNote, BG_STEP_MS);
+}
+
+function startBgMusic(){
+  if(bgPlaying) return;
+  bgPlaying = true;
+  bgStep = 0;
+  scheduleBgNote();
+}
+function stopBgMusic(){
+  bgPlaying = false;
+  if(bgTimer) clearTimeout(bgTimer);
+}
+
+// ---------- Check ----------
+document.getElementById('checkBtn').addEventListener('click', ()=>{
+  const w = WORDS[selectedWordIdx];
+  if(!w || w.solved) return;
+  const toast = document.getElementById('toast');
+
+  if(buzzedIdx === null){
+    toast.textContent = 'Pilih dulu tim yang buzz duluan!';
+    toast.className = 'toast no';
+    return;
+  }
+
+  const guess = w.cells.map(cell=>inputs[cell.r][cell.c].el.value.toUpperCase()).join('');
+
+  if(guess === w.answer){
+    w.solved = true;
+    w.cells.forEach(cell=>{
+      const el = inputs[cell.r][cell.c].el;
+      el.parentElement.classList.remove('wrong');
+      el.parentElement.classList.add('correct');
+    });
+    teams[buzzedIdx].score += w.points;
+    playCorrectSound();
+    toast.textContent = 'Benar! ' + teams[buzzedIdx].name + ' dapat ' + w.points + ' poin.';
+    toast.className = 'toast ok';
+    updateClueHighlight();
+    buzzedIdx = null;
+    refreshScoreboardVisuals();
+
+    const nextUnsolved = WORDS.findIndex(x=>!x.solved);
+    if(nextUnsolved === -1){
+      toast.textContent += ' Semua soal selesai!';
+      buildBuzzRow();
+    } else {
+      selectWord(nextUnsolved);
+    }
+  } else {
+    w.cells.forEach(cell=>{
+      const el = inputs[cell.r][cell.c].el;
+      if(el.value) el.parentElement.classList.add('wrong');
+    });
+    const wrongTeam = teams[buzzedIdx].name;
+    playWrongSound();
+    if(w.bonus){
+      teams[buzzedIdx].score -= 25;
+      toast.textContent = wrongTeam + ' belum tepat — kena −25 poin! Tim lain boleh rebutan.';
+    } else {
+      toast.textContent = wrongTeam + ' belum tepat — tim lain boleh rebutan!';
+    }
+    w.tried.add(buzzedIdx);
+    buzzedIdx = null;
+    toast.className = 'toast no';
+    buildBuzzRow();
+    refreshScoreboardVisuals();
+    setTimeout(()=>{
+      w.cells.forEach(cell=>inputs[cell.r][cell.c].el.parentElement.classList.remove('wrong'));
+    }, 1200);
+  }
+});
+
+document.getElementById('finishBtn').addEventListener('click', showFinal);
+
+document.getElementById('muteBtn').addEventListener('click', (e)=>{
+  if(bgPlaying){
+    stopBgMusic();
+    e.target.textContent = '🔇 Musik';
+  } else {
+    startBgMusic();
+    e.target.textContent = '🔊 Musik';
+  }
+});
+
+// ---------- Final ----------
+function showFinal(){
+  stopBgMusic();
+  const sorted = [...teams].sort((a,b)=>b.score - a.score);
+  const podium = document.getElementById('podium');
+  podium.innerHTML = '';
+  const order = sorted.length >= 3 ? [1,0,2] : sorted.map((_,i)=>i);
+  order.forEach(idx=>{
+    if(!sorted[idx]) return;
+    const t = sorted[idx];
+    const div = document.createElement('div');
+    div.className = 'pod' + (idx===0 ? ' first' : '');
+    const rankLabel = idx===0 ? 'Juara 1' : idx===1 ? 'Juara 2' : 'Juara 3';
+    div.innerHTML = `<div class="rank">${rankLabel}</div><div class="tname">${t.name}</div><div class="tscore">${t.score}</div>`;
+    podium.appendChild(div);
+  });
+  document.getElementById('finalHeadline').textContent = 'Selamat, ' + sorted[0].name + '!';
+  showScreen('screen-final');
+}
+</script>
+</body>
+</html>
