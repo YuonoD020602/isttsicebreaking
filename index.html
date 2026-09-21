@@ -84,12 +84,13 @@
   .setup-card{background:var(--navy-card); border:1px solid var(--line); border-radius:20px; padding:32px; width:100%; max-width:520px; text-align:left;}
   .setup-row{margin-bottom:22px;}
   .setup-row label{display:block; font-size:13px; font-weight:700; color:var(--gold-bright); margin-bottom:10px;}
-  .team-count-btns{display:flex; gap:10px;}
-  .count-btn{flex:1; padding:12px 0; border-radius:12px; border:1px solid var(--line); background:var(--navy); color:var(--cream); font-family:'Manrope'; font-weight:700; font-size:16px; cursor:pointer;}
-  .count-btn.selected{background:var(--gold); color:var(--navy-deep); border-color:var(--gold);}
   .name-inputs{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
-  .name-inputs input{width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:var(--navy); color:var(--cream); font-family:'Manrope'; font-size:15px;}
-  .name-inputs input:focus{outline:none; border-color:var(--gold);}
+  .peserta-row{display:flex; gap:6px; align-items:center;}
+  .peserta-row input{width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:var(--navy); color:var(--cream); font-family:'Manrope'; font-size:15px;}
+  .peserta-row input:focus{outline:none; border-color:var(--gold);}
+  .peserta-row .remove-btn{flex-shrink:0; width:34px; height:34px; border-radius:8px; border:1px solid var(--line); background:var(--navy); color:var(--coral); font-weight:800; font-size:15px; line-height:1; cursor:pointer;}
+  .add-peserta-btn{margin-top:12px; width:100%; padding:11px 0; border-radius:10px; border:1px dashed var(--line); background:transparent; color:var(--gold-bright); font-family:'Manrope'; font-weight:700; font-size:13.5px; cursor:pointer;}
+  .add-peserta-btn:disabled{opacity:.35; cursor:not-allowed;}
   .big-btn{margin-top:8px; width:100%; padding:16px 0; border-radius:12px; border:none; background:var(--gold); color:var(--navy-deep); font-family:'Manrope'; font-weight:800; font-size:16px; cursor:pointer;}
   .ghost-btn{margin-top:12px; background:transparent; border:1px solid var(--line); color:var(--cream); padding:12px 0; width:100%; border-radius:12px; font-family:'Manrope'; font-weight:700; font-size:14px; cursor:pointer;}
 
@@ -197,16 +198,9 @@
     <p class="lede">Kali ini beneran teka-teki silang — satu grid, saling potong hurufnya, dan jawabannya diketik langsung di kotak.</p>
     <div class="setup-card">
       <div class="setup-row">
-        <label>Jumlah tim</label>
-        <div class="team-count-btns" id="countBtns">
-          <button class="count-btn" data-n="2">2 Tim</button>
-          <button class="count-btn selected" data-n="3">3 Tim</button>
-          <button class="count-btn" data-n="4">4 Tim</button>
-        </div>
-      </div>
-      <div class="setup-row">
-        <label>Nama tim</label>
+        <label>Nama peserta (min. 2 orang)</label>
         <div class="name-inputs" id="nameInputs"></div>
+        <button class="add-peserta-btn" id="addPesertaBtn" type="button">+ Tambah Peserta</button>
       </div>
       <button class="big-btn" id="startBtn">Lanjut ke Aturan Main</button>
     </div>
@@ -218,10 +212,10 @@
     <h1>Cara Mainnya</h1>
     <div class="rules-list">
       <div class="rule"><div class="num">1</div><p>Ada 1 grid TTS di layar dengan beberapa kata: <b>Mendatar</b> dan <b>Menurun</b>, saling potong di beberapa huruf. Kotak emas = <b>huruf kunci</b> gratis. Kotak hijau (MEJA) = <b>contoh</b> soal yang udah terisi duluan, biar kebayang cara bacanya.</p></div>
-      <div class="rule"><div class="num">2</div><p>Fasilitator baca satu soal dari daftar clue. Semua tim boleh mikir bareng dulu.</p></div>
-      <div class="rule"><div class="num">3</div><p>Begitu ada tim yang paling cepat angkat tangan / teriak, klik nama timnya di tombol <b>buzz</b> yang muncul di bawah grid.</p></div>
-      <div class="rule"><div class="num">4</div><p>Fasilitator ketik jawaban tim ke kotak grid, lalu klik <b>"Cek Jawaban"</b>. Benar → kotak hijau, poin masuk ke tim yang buzz.</p></div>
-      <div class="rule"><div class="num">5</div><p>Salah → tombol tim itu terkunci buat soal ini, tapi tim lain masih boleh <b>rebutan buzz</b> lagi untuk soal yang sama.</p></div>
+      <div class="rule"><div class="num">2</div><p>Fasilitator baca satu soal dari daftar clue. Semua peserta boleh mikir sendiri-sendiri dulu.</p></div>
+      <div class="rule"><div class="num">3</div><p>Begitu ada peserta yang paling cepat angkat tangan / teriak, klik namanya di tombol <b>buzz</b> yang muncul di bawah grid.</p></div>
+      <div class="rule"><div class="num">4</div><p>Fasilitator ketik jawaban peserta ke kotak grid, lalu klik <b>"Cek Jawaban"</b>. Benar → kotak hijau, poin masuk ke peserta yang buzz.</p></div>
+      <div class="rule"><div class="num">5</div><p>Salah → tombolnya terkunci buat soal ini, tapi peserta lain masih boleh <b>rebutan buzz</b> lagi untuk soal yang sama.</p></div>
       <div class="rule"><div class="num">6</div><p>Soal <b>Bonus</b> taruhannya lebih tinggi: benar dapat <b>+20 poin</b>, tapi kalau salah malah kena <b>−25 poin</b>. Mikir dulu sebelum buzz!</p></div>
     </div>
     <button class="big-btn" id="beginGameBtn" style="max-width:340px;">Mulai Permainan</button>
@@ -244,7 +238,7 @@
     </div>
 
     <div class="buzz-section">
-      <p class="buzz-label">Tim yang buzz duluan:</p>
+      <p class="buzz-label">Peserta yang buzz duluan:</p>
       <div class="buzz-row" id="buzzRow"></div>
     </div>
 
@@ -337,43 +331,58 @@ const GIVENS = {
 
 // ---------- State ----------
 let teams = [];
-const colors = ['#EAC873', '#E2725B', '#5FA579', '#8FA7D6'];
-let teamCount = 3;
+const colors = ['#EAC873', '#E2725B', '#5FA579', '#8FA7D6', '#C48FD6', '#D68F9E', '#8FD6C0', '#D6C48F', '#8FA0D6', '#D68FB0'];
+const MIN_PESERTA = 2;
+const MAX_PESERTA = 10;
+let pesertaNames = ['', ''];
 let buzzedIdx = null;
 let selectedWordIdx = 0;
 let inputs = []; // inputs[r][c] -> {el, num}
 
 // ---------- Setup screen ----------
-const countBtns = document.getElementById('countBtns');
 const nameInputs = document.getElementById('nameInputs');
+const addPesertaBtn = document.getElementById('addPesertaBtn');
 
 function renderNameInputs(){
   nameInputs.innerHTML = '';
-  for(let i=0;i<teamCount;i++){
+  pesertaNames.forEach((val, i)=>{
+    const row = document.createElement('div');
+    row.className = 'peserta-row';
     const inp = document.createElement('input');
-    inp.placeholder = 'Nama Tim ' + (i+1);
+    inp.placeholder = 'Nama Peserta ' + (i+1);
     inp.maxLength = 24;
-    inp.id = 'teamname-' + i;
-    nameInputs.appendChild(inp);
-  }
+    inp.value = val;
+    inp.addEventListener('input', ()=>{ pesertaNames[i] = inp.value; });
+    row.appendChild(inp);
+    if(pesertaNames.length > MIN_PESERTA){
+      const rm = document.createElement('button');
+      rm.type = 'button';
+      rm.className = 'remove-btn';
+      rm.textContent = '×';
+      rm.addEventListener('click', ()=>{
+        pesertaNames.splice(i, 1);
+        renderNameInputs();
+      });
+      row.appendChild(rm);
+    }
+    nameInputs.appendChild(row);
+  });
+  addPesertaBtn.disabled = pesertaNames.length >= MAX_PESERTA;
 }
 renderNameInputs();
 
-countBtns.addEventListener('click', (e)=>{
-  const btn = e.target.closest('.count-btn');
-  if(!btn) return;
-  document.querySelectorAll('.count-btn').forEach(b=>b.classList.remove('selected'));
-  btn.classList.add('selected');
-  teamCount = parseInt(btn.dataset.n, 10);
+addPesertaBtn.addEventListener('click', ()=>{
+  if(pesertaNames.length >= MAX_PESERTA) return;
+  pesertaNames.push('');
   renderNameInputs();
 });
 
 document.getElementById('startBtn').addEventListener('click', ()=>{
-  teams = [];
-  for(let i=0;i<teamCount;i++){
-    const val = document.getElementById('teamname-'+i).value.trim();
-    teams.push({ name: val || ('Tim ' + (i+1)), score: 0, color: colors[i] });
-  }
+  teams = pesertaNames.map((val, i)=>({
+    name: val.trim() || ('Peserta ' + (i+1)),
+    score: 0,
+    color: colors[i % colors.length]
+  }));
   buildScoreboard();
   document.getElementById('scoreboard').style.display = 'block';
   showScreen('screen-rules');
@@ -731,13 +740,13 @@ document.getElementById('checkBtn').addEventListener('click', ()=>{
       const el = inputs[cell.r][cell.c].el;
       if(el.value) el.parentElement.classList.add('wrong');
     });
-    const wrongTeam = teams[buzzedIdx].name;
+    const wrongPeserta = teams[buzzedIdx].name;
     playWrongSound();
     if(w.bonus){
       teams[buzzedIdx].score -= 25;
-      toast.textContent = wrongTeam + ' belum tepat — kena −25 poin! Tim lain boleh rebutan.';
+      toast.textContent = wrongPeserta + ' belum tepat — kena −25 poin! Peserta lain boleh rebutan.';
     } else {
-      toast.textContent = wrongTeam + ' belum tepat — tim lain boleh rebutan!';
+      toast.textContent = wrongPeserta + ' belum tepat — peserta lain boleh rebutan!';
     }
     w.tried.add(buzzedIdx);
     buzzedIdx = null;
