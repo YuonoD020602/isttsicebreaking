@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tebak Angka — Ice Breaking Training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-deep:#0A1830;
+    --navy:#0F2244;
+    --navy-card:#14294F;
+    --gold:#D4AF52;
+    --gold-bright:#EAC873;
+    --cream:#F7F2E7;
+    --ink:#1C2A3A;
+    --coral:#E2725B;
+    --green:#2F8F5B;
+    --green-bg:#D7F0E0;
+    --line: rgba(234,200,115,0.18);
+    box-sizing:border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1100px 600px at 15% -10%, rgba(234,200,115,0.10), transparent 60%),
+      radial-gradient(900px 500px at 100% 110%, rgba(234,200,115,0.07), transparent 55%),
+      var(--navy-deep);
+    color:var(--cream);
+    font-family:'Manrope', sans-serif;
+    min-height:100%;
+    display:flex;
+    flex-direction:column;
+    overflow-x:hidden;
+  }
+  .pillars{position:fixed; left:0; right:0; bottom:0; height:6px; display:flex; z-index:5; pointer-events:none;}
+  .pillars span{flex:1; background:var(--gold); opacity:.55;}
+  .pillars span:nth-child(even){opacity:.28;}
+
+  #scoreboard{
+    display:none; position:sticky; top:0; z-index:10;
+    padding:14px 20px calc(14px + env(safe-area-inset-top,0px));
+    padding-top:calc(14px + env(safe-area-inset-top,0px));
+    background:linear-gradient(180deg, var(--navy-deep) 75%, transparent);
+    backdrop-filter:blur(6px);
+  }
+  #scoreboard .rowwrap{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; max-width:1200px; margin:0 auto;}
+  .team-pill{display:flex; align-items:center; gap:8px; background:var(--navy-card); border:1px solid var(--line); border-radius:999px; padding:6px 14px 6px 6px; min-width:120px;}
+  .team-pill .dot{width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Fraunces', serif; font-weight:600; font-size:12px; color:var(--navy-deep); flex-shrink:0;}
+  .team-pill .info{display:flex; flex-direction:column; line-height:1.15;}
+  .team-pill .tname{font-size:11px; font-weight:700; letter-spacing:.2px;}
+  .team-pill .tscore{font-family:'Fraunces', serif; font-size:15px; font-weight:600; color:var(--gold-bright);}
+  .team-pill.leading{border-color:var(--gold); box-shadow:0 0 0 1px var(--gold) inset;}
+  .team-pill.rank1{outline:2px solid var(--gold-bright); outline-offset:1px;}
+
+  main{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px 20px 48px;}
+  .screen{width:100%; max-width:960px; display:none; flex-direction:column; align-items:center; text-align:center;}
+  .screen.active{display:flex;}
+
+  .eyebrow{font-size:13px; letter-spacing:.4px; color:var(--gold-bright); font-weight:700; margin-bottom:10px;}
+  h1{font-family:'Fraunces', serif; font-weight:600; font-size:clamp(28px,4.6vw,48px); line-height:1.08; margin:0 0 14px;}
+  .lede{color:rgba(247,242,231,.72); font-size:16px; line-height:1.6; max-width:560px; margin:0 auto 30px;}
+
+  .setup-card{background:var(--navy-card); border:1px solid var(--line); border-radius:20px; padding:32px; width:100%; max-width:520px; text-align:left;}
+  .setup-row{margin-bottom:22px;}
+  .setup-row label{display:block; font-size:13px; font-weight:700; color:var(--gold-bright); margin-bottom:10px;}
+  .name-inputs{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .peserta-row{display:flex; gap:6px; align-items:center;}
+  .peserta-row input{width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:var(--navy); color:var(--cream); font-family:'Manrope'; font-size:15px;}
+  .peserta-row input:focus{outline:none; border-color:var(--gold);}
+  .peserta-row .remove-btn{flex-shrink:0; width:34px; height:34px; border-radius:8px; border:1px solid var(--line); background:var(--navy); color:var(--coral); font-weight:800; font-size:15px; line-height:1; cursor:pointer;}
+  .add-peserta-btn{margin-top:12px; width:100%; padding:11px 0; border-radius:10px; border:1px dashed var(--line); background:transparent; color:var(--gold-bright); font-family:'Manrope'; font-weight:700; font-size:13.5px; cursor:pointer;}
+  .add-peserta-btn:disabled{opacity:.35; cursor:not-allowed;}
+  .big-btn{margin-top:8px; width:100%; padding:16px 0; border-radius:12px; border:none; background:var(--gold); color:var(--navy-deep); font-family:'Manrope'; font-weight:800; font-size:16px; cursor:pointer;}
+  .ghost-btn{margin-top:12px; background:transparent; border:1px solid var(--line); color:var(--cream); padding:12px 0; width:100%; border-radius:12px; font-family:'Manrope'; font-weight:700; font-size:14px; cursor:pointer;}
+
+  .rules-list{text-align:left; width:100%; max-width:640px; display:flex; flex-direction:column; gap:14px; margin-bottom:30px;}
+  .rule{display:flex; gap:14px; background:var(--navy-card); border:1px solid var(--line); border-radius:14px; padding:16px 18px; align-items:flex-start;}
+  .rule .num{font-family:'Fraunces', serif; font-weight:600; color:var(--gold-bright); font-size:22px; flex-shrink:0; width:28px;}
+  .rule p{margin:0; font-size:14.5px; line-height:1.55; color:rgba(247,242,231,.85);}
+
+  .qcounter{font-size:13px; font-weight:700; color:var(--gold-bright); margin-bottom:8px;}
+  .question-card{background:var(--navy-card); border:1px solid var(--line); border-radius:18px; padding:26px 30px; width:100%; max-width:760px; margin-bottom:24px;}
+  .question-card p{margin:0; font-size:clamp(16px,2.4vw,21px); line-height:1.5; font-weight:600;}
+  .question-card .unit{margin-top:8px; font-size:13px; color:var(--gold-bright); font-weight:700;}
+
+  .guess-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:10px; width:100%; max-width:900px; margin-bottom:22px;}
+  .guess-item{background:var(--navy-card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; text-align:left;}
+  .guess-item.top1{border-color:var(--gold-bright); box-shadow:0 0 0 1px var(--gold-bright) inset;}
+  .guess-item.top2{border-color:var(--gold); }
+  .guess-item.top3{border-color:rgba(212,175,82,.5);}
+  .guess-item label{display:block; font-size:11.5px; font-weight:700; color:rgba(247,242,231,.75); margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .guess-item input{width:100%; padding:9px 10px; border-radius:8px; border:1px solid var(--line); background:var(--navy); color:var(--cream); font-family:'Manrope'; font-size:14px; font-weight:700;}
+  .guess-item input:focus{outline:none; border-color:var(--gold);}
+  .guess-item input:disabled{opacity:.8;}
+  .guess-item .result{margin-top:6px; font-size:11px; font-weight:700; min-height:14px;}
+  .guess-item .result.pts{color:var(--gold-bright);}
+
+  .controls-row{display:flex; gap:12px; margin-top:6px; width:100%; justify-content:center; flex-wrap:wrap;}
+  .ctrl{padding:13px 26px; border-radius:12px; font-family:'Manrope'; font-weight:700; font-size:14.5px; cursor:pointer; border:1px solid var(--line); background:transparent; color:var(--cream);}
+  .ctrl.primary{background:var(--gold); color:var(--navy-deep); border-color:var(--gold); font-weight:800;}
+  .ctrl.finish{background:var(--navy-card);}
+  .ctrl:disabled{opacity:.35; cursor:not-allowed;}
+
+  .toast{margin-top:16px; font-weight:700; font-size:14px; min-height:20px;}
+  .toast.ok{color:var(--green);}
+
+  .podium{display:flex; align-items:flex-end; gap:14px; justify-content:center; width:100%; margin:20px 0 8px;}
+  .pod{background:var(--navy-card); border:1px solid var(--line); border-top:3px solid var(--gold); border-radius:14px 14px 0 0; padding:20px 16px; text-align:center; flex:1; max-width:220px;}
+  .pod.first{border-top-color:var(--gold-bright); padding-top:34px; background:linear-gradient(180deg, rgba(234,200,115,.14), var(--navy-card));}
+  .pod .rank{font-family:'Fraunces', serif; font-size:13px; color:var(--gold-bright); font-weight:600; margin-bottom:6px;}
+  .pod .tname{font-weight:800; font-size:15px; margin-bottom:4px;}
+  .pod .tscore{font-family:'Fraunces', serif; font-size:26px; color:var(--gold-bright); font-weight:600;}
+
+  @media (max-width:640px){
+    .name-inputs{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div id="scoreboard"><div class="rowwrap" id="scoreboardRow"></div></div>
+
+<main>
+
+  <!-- SETUP -->
+  <section class="screen active" id="screen-setup">
+    <div class="eyebrow">Ice Breaking · Training Session</div>
+    <h1>Tebak Angka</h1>
+    <p class="lede">Semua orang ikut nebak di setiap ronde — bukan cuma yang paling cepat buzz. Yang tebakannya paling dekat ke angka asli, dapat poin paling banyak.</p>
+    <div class="setup-card">
+      <div class="setup-row">
+        <label>Nama peserta (min. 2 orang)</label>
+        <div class="name-inputs" id="nameInputs"></div>
+        <button class="add-peserta-btn" id="addPesertaBtn" type="button">+ Tambah Peserta</button>
+      </div>
+      <button class="big-btn" id="startBtn">Lanjut ke Aturan Main</button>
+    </div>
+  </section>
+
+  <!-- RULES -->
+  <section class="screen" id="screen-rules">
+    <div class="eyebrow">Sebelum Mulai</div>
+    <h1>Cara Mainnya</h1>
+    <div class="rules-list">
+      <div class="rule"><div class="num">1</div><p>Fasilitator baca satu pertanyaan yang jawabannya berupa angka (contoh: "Berapa tinggi Monas dalam meter?").</p></div>
+      <div class="rule"><div class="num">2</div><p><b>Semua peserta</b> menebak angkanya masing-masing — nggak perlu rebutan buzz, semua boleh isi bareng-bareng.</p></div>
+      <div class="rule"><div class="num">3</div><p>Fasilitator ketik tebakan tiap orang ke kotak masing-masing, lalu klik <b>"Tutup & Lihat Hasil"</b>.</p></div>
+      <div class="rule"><div class="num">4</div><p>Angka aslinya muncul, lalu sistem otomatis urutkan siapa paling dekat. <b>Terdekat #1 = 10 poin, #2 = 6 poin, #3 = 3 poin.</b></p></div>
+      <div class="rule"><div class="num">5</div><p>Lanjut ke pertanyaan berikutnya, skor terus terkumpul sampai soal habis.</p></div>
+    </div>
+    <button class="big-btn" id="beginGameBtn" style="max-width:340px;">Mulai Permainan</button>
+  </section>
+
+  <!-- GAME -->
+  <section class="screen" id="screen-game">
+    <div class="qcounter" id="qCounter">Pertanyaan 1 / 8</div>
+    <div class="question-card">
+      <p id="questionText"></p>
+      <div class="unit" id="questionUnit"></div>
+    </div>
+
+    <div class="guess-grid" id="guessGrid"></div>
+
+    <div class="controls-row">
+      <button class="ctrl primary" id="revealBtn">Tutup &amp; Lihat Hasil</button>
+      <button class="ctrl" id="nextBtn" disabled>Pertanyaan Berikutnya</button>
+      <button class="ctrl finish" id="finishBtn">Selesai &amp; Lihat Skor</button>
+    </div>
+    <div class="toast" id="toast"></div>
+  </section>
+
+  <!-- FINAL -->
+  <section class="screen" id="screen-final">
+    <div class="eyebrow">Selesai!</div>
+    <h1>Tebak Angka Kelar</h1>
+    <p class="lede">Makasih udah berani nebak. Lanjut ke sesi training ya!</p>
+    <div class="podium" id="podium"></div>
+    <button class="ghost-btn" id="restartBtn" style="max-width:280px;">Main Ulang dari Awal</button>
+  </section>
+
+</main>
+
+<div class="pillars"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+<script>
+// ---------- Questions ----------
+const QUESTIONS = [
+  { q:'Berapa jumlah pulau di Indonesia menurut data resmi pemerintah?', unit:'satuan pulau', answer:17508 },
+  { q:'Berapa tinggi Monumen Nasional (Monas) di Jakarta?', unit:'meter', answer:132 },
+  { q:'Ada berapa provinsi di Indonesia saat ini?', unit:'provinsi', answer:38 },
+  { q:'Berapa kecepatan maksimum kereta cepat Whoosh Jakarta–Bandung?', unit:'km/jam', answer:350 },
+  { q:'Berapa jumlah huruf dalam alfabet yang dipakai Bahasa Indonesia?', unit:'huruf', answer:26 },
+  { q:'Berapa jam durasi tidur yang disarankan untuk orang dewasa per malam?', unit:'jam', answer:8 },
+  { q:'Kira-kira berapa kilometer jarak tempuh darat Jakarta–Bandung?', unit:'km', answer:150 },
+  { q:'Berapa derajat Celsius suhu tubuh normal manusia?', unit:'°C', answer:37 },
+];
+
+// ---------- State ----------
+let teams = [];
+const colors = ['#EAC873', '#E2725B', '#5FA579', '#8FA7D6', '#C48FD6', '#D68F9E', '#8FD6C0', '#D6C48F', '#8FA0D6', '#D68FB0', '#9ED68F', '#8FCFD6'];
+const MIN_PESERTA = 2;
+const MAX_PESERTA = 12;
+let pesertaNames = ['', '', '', '', '', '', '', '', '', '', '', ''];
+let currentQ = 0;
+let revealed = false;
+
+// ---------- Setup screen ----------
+const nameInputs = document.getElementById('nameInputs');
+const addPesertaBtn = document.getElementById('addPesertaBtn');
+
+function renderNameInputs(){
+  nameInputs.innerHTML = '';
+  pesertaNames.forEach((val, i)=>{
+    const row = document.createElement('div');
+    row.className = 'peserta-row';
+    const inp = document.createElement('input');
+    inp.placeholder = 'Nama Peserta ' + (i+1);
+    inp.maxLength = 24;
+    inp.value = val;
+    inp.addEventListener('input', ()=>{ pesertaNames[i] = inp.value; });
+    row.appendChild(inp);
+    if(pesertaNames.length > MIN_PESERTA){
+      const rm = document.createElement('button');
+      rm.type = 'button';
+      rm.className = 'remove-btn';
+      rm.textContent = '×';
+      rm.addEventListener('click', ()=>{
+        pesertaNames.splice(i, 1);
+        renderNameInputs();
+      });
+      row.appendChild(rm);
+    }
+    nameInputs.appendChild(row);
+  });
+  addPesertaBtn.disabled = pesertaNames.length >= MAX_PESERTA;
+}
+renderNameInputs();
+
+addPesertaBtn.addEventListener('click', ()=>{
+  if(pesertaNames.length >= MAX_PESERTA) return;
+  pesertaNames.push('');
+  renderNameInputs();
+});
+
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  teams = pesertaNames.map((val, i)=>({
+    name: val.trim() || ('Peserta ' + (i+1)),
+    score: 0,
+    color: colors[i % colors.length]
+  }));
+  buildScoreboard();
+  document.getElementById('scoreboard').style.display = 'block';
+  showScreen('screen-rules');
+});
+
+document.getElementById('beginGameBtn').addEventListener('click', ()=>{
+  currentQ = 0;
+  showScreen('screen-game');
+  loadQuestion();
+});
+
+document.getElementById('restartBtn').addEventListener('click', ()=>{
+  document.getElementById('scoreboard').style.display = 'none';
+  showScreen('screen-setup');
+});
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ---------- Scoreboard ----------
+function buildScoreboard(){
+  const row = document.getElementById('scoreboardRow');
+  row.innerHTML = '';
+  teams.forEach((t, i)=>{
+    const pill = document.createElement('div');
+    pill.className = 'team-pill';
+    pill.id = 'pill-' + i;
+    pill.innerHTML = `<div class="dot" style="background:${t.color}">${t.name.charAt(0).toUpperCase()}</div>
+      <div class="info"><span class="tname">${t.name}</span><span class="tscore">${t.score}</span></div>`;
+    row.appendChild(pill);
+  });
+  refreshScoreboardVisuals();
+}
+function refreshScoreboardVisuals(){
+  const max = Math.max(...teams.map(t=>t.score));
+  teams.forEach((t,i)=>{
+    const pill = document.getElementById('pill-'+i);
+    if(!pill) return;
+    pill.querySelector('.tscore').textContent = t.score;
+    pill.classList.toggle('leading', max > 0 && t.score === max);
+  });
+}
+
+// ---------- Game ----------
+function loadQuestion(){
+  revealed = false;
+  const q = QUESTIONS[currentQ];
+  document.getElementById('qCounter').textContent = `Pertanyaan ${currentQ+1} / ${QUESTIONS.length}`;
+  document.getElementById('questionText').textContent = q.q;
+  document.getElementById('questionUnit').textContent = 'Jawab dalam: ' + q.unit;
+  document.getElementById('toast').textContent = '';
+  document.getElementById('revealBtn').disabled = false;
+  document.getElementById('nextBtn').disabled = true;
+  buildGuessGrid();
+}
+
+function buildGuessGrid(){
+  const grid = document.getElementById('guessGrid');
+  grid.innerHTML = '';
+  teams.forEach((t,i)=>{
+    const item = document.createElement('div');
+    item.className = 'guess-item';
+    item.id = 'guess-' + i;
+    item.innerHTML = `<label>${t.name}</label>
+      <input type="number" inputmode="numeric" id="guess-input-${i}" placeholder="Tebakan...">
+      <div class="result" id="guess-result-${i}"></div>`;
+    grid.appendChild(item);
+  });
+}
+
+document.getElementById('revealBtn').addEventListener('click', ()=>{
+  if(revealed) return;
+  const q = QUESTIONS[currentQ];
+  const guesses = teams.map((t,i)=>{
+    const el = document.getElementById('guess-input-'+i);
+    const val = parseFloat(el.value);
+    el.disabled = true;
+    return { i, val: isNaN(val) ? null : val, diff: isNaN(val) ? Infinity : Math.abs(val - q.answer) };
+  });
+  const ranked = [...guesses].filter(g=>g.val!==null).sort((a,b)=>a.diff-b.diff);
+  const pointsByRank = [10, 6, 3];
+  let rank = 0;
+  let prevDiff = null;
+  ranked.forEach((g, idx)=>{
+    if(prevDiff === null || g.diff !== prevDiff) rank = idx;
+    prevDiff = g.diff;
+    const pts = rank < 3 ? pointsByRank[rank] : 0;
+    if(pts > 0){
+      teams[g.i].score += pts;
+      const item = document.getElementById('guess-'+g.i);
+      item.classList.add('top' + (rank+1));
+      document.getElementById('guess-result-'+g.i).textContent = `+${pts} poin (selisih ${g.diff})`;
+      document.getElementById('guess-result-'+g.i).classList.add('pts');
+    } else {
+      document.getElementById('guess-result-'+g.i).textContent = `selisih ${g.diff}`;
+    }
+  });
+  guesses.filter(g=>g.val===null).forEach(g=>{
+    document.getElementById('guess-result-'+g.i).textContent = 'tidak jawab';
+  });
+
+  document.getElementById('toast').textContent = `Jawaban asli: ${q.answer} ${q.unit}`;
+  document.getElementById('toast').className = 'toast ok';
+  document.getElementById('revealBtn').disabled = true;
+  document.getElementById('nextBtn').disabled = false;
+  refreshScoreboardVisuals();
+  revealed = true;
+});
+
+document.getElementById('nextBtn').addEventListener('click', ()=>{
+  currentQ++;
+  if(currentQ >= QUESTIONS.length){
+    showFinal();
+  } else {
+    loadQuestion();
+  }
+});
+
+document.getElementById('finishBtn').addEventListener('click', showFinal);
+
+// ---------- Final ----------
+function showFinal(){
+  const sorted = [...teams].sort((a,b)=>b.score - a.score);
+  const podium = document.getElementById('podium');
+  podium.innerHTML = '';
+  const order = sorted.length >= 3 ? [1,0,2] : sorted.map((_,i)=>i);
+  order.forEach(idx=>{
+    if(!sorted[idx]) return;
+    const t = sorted[idx];
+    const div = document.createElement('div');
+    div.className = 'pod' + (idx===0 ? ' first' : '');
+    const rankLabel = idx===0 ? 'Juara 1' : idx===1 ? 'Juara 2' : 'Juara 3';
+    div.innerHTML = `<div class="rank">${rankLabel}</div><div class="tname">${t.name}</div><div class="tscore">${t.score}</div>`;
+    podium.appendChild(div);
+  });
+  showScreen('screen-final');
+}
+</script>
+</body>
+</html>
