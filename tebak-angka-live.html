@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tebak Angka Live — Ice Breaking Training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+<style>
+  :root{
+    --navy-deep:#0A1830;
+    --navy:#0F2244;
+    --navy-card:#14294F;
+    --gold:#D4AF52;
+    --gold-bright:#EAC873;
+    --cream:#F7F2E7;
+    --ink:#1C2A3A;
+    --coral:#E2725B;
+    --green:#2F8F5B;
+    --line: rgba(234,200,115,0.18);
+    box-sizing:border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1100px 600px at 15% -10%, rgba(234,200,115,0.10), transparent 60%),
+      radial-gradient(900px 500px at 100% 110%, rgba(234,200,115,0.07), transparent 55%),
+      var(--navy-deep);
+    color:var(--cream);
+    font-family:'Manrope', sans-serif;
+    min-height:100%;
+    display:flex;
+    flex-direction:column;
+    overflow-x:hidden;
+  }
+  .pillars{position:fixed; left:0; right:0; bottom:0; height:6px; display:flex; z-index:5; pointer-events:none;}
+  .pillars span{flex:1; background:var(--gold); opacity:.55;}
+  .pillars span:nth-child(even){opacity:.28;}
+
+  main{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px 20px 48px;}
+  .screen{width:100%; max-width:960px; display:none; flex-direction:column; align-items:center; text-align:center;}
+  .screen.active{display:flex;}
+
+  .eyebrow{font-size:13px; letter-spacing:.4px; color:var(--gold-bright); font-weight:700; margin-bottom:10px;}
+  h1{font-family:'Fraunces', serif; font-weight:600; font-size:clamp(26px,4.6vw,44px); line-height:1.1; margin:0 0 14px;}
+  .lede{color:rgba(247,242,231,.72); font-size:15.5px; line-height:1.6; max-width:560px; margin:0 auto 26px;}
+
+  .role-btns{display:flex; gap:14px; flex-wrap:wrap; justify-content:center; width:100%; max-width:520px;}
+  .role-card{flex:1; min-width:200px; background:var(--navy-card); border:1px solid var(--line); border-radius:16px; padding:26px 20px; cursor:pointer; text-align:left;}
+  .role-card:hover{border-color:var(--gold);}
+  .role-card .icon{font-size:28px; margin-bottom:10px;}
+  .role-card h3{font-family:'Fraunces', serif; font-size:18px; margin:0 0 6px;}
+  .role-card p{margin:0; font-size:13px; color:rgba(247,242,231,.7); line-height:1.5;}
+
+  .setup-card{background:var(--navy-card); border:1px solid var(--line); border-radius:20px; padding:28px; width:100%; max-width:420px; text-align:left;}
+  .setup-card label{display:block; font-size:13px; font-weight:700; color:var(--gold-bright); margin-bottom:10px;}
+  .setup-card input{width:100%; padding:14px 16px; border-radius:10px; border:1px solid var(--line); background:var(--navy); color:var(--cream); font-family:'Manrope'; font-size:16px; margin-bottom:16px;}
+  .setup-card input:focus{outline:none; border-color:var(--gold);}
+  .big-btn{width:100%; padding:16px 0; border-radius:12px; border:none; background:var(--gold); color:var(--navy-deep); font-family:'Manrope'; font-weight:800; font-size:16px; cursor:pointer;}
+  .big-btn:disabled{opacity:.4; cursor:not-allowed;}
+  .ghost-btn{background:transparent; border:1px solid var(--line); color:var(--cream); padding:12px 20px; border-radius:12px; font-family:'Manrope'; font-weight:700; font-size:13.5px; cursor:pointer;}
+
+  .link-box{background:var(--navy); border:1px solid var(--line); border-radius:10px; padding:12px 14px; font-size:13px; word-break:break-all; margin:14px 0; width:100%; max-width:520px;}
+
+  .joined-list{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; width:100%; max-width:700px; margin:16px 0;}
+  .joined-pill{background:var(--navy-card); border:1px solid var(--line); border-radius:999px; padding:7px 16px; font-size:13px; font-weight:700;}
+  .joined-count{font-size:13px; color:var(--gold-bright); font-weight:700; margin-top:4px;}
+
+  .qcounter{font-size:13px; font-weight:700; color:var(--gold-bright); margin-bottom:8px;}
+  .question-card{background:var(--navy-card); border:1px solid var(--line); border-radius:18px; padding:24px 26px; width:100%; max-width:700px; margin-bottom:18px;}
+  .question-card p{margin:0; font-size:clamp(16px,2.6vw,20px); line-height:1.5; font-weight:600;}
+  .question-card .unit{margin-top:8px; font-size:13px; color:var(--gold-bright); font-weight:700;}
+
+  .answer-box{width:100%; max-width:340px;}
+  .answer-box input{width:100%; padding:16px; border-radius:12px; border:2px solid var(--line); background:var(--navy); color:var(--cream); font-family:'Fraunces',serif; font-size:26px; font-weight:700; text-align:center;}
+  .answer-box input:focus{outline:none; border-color:var(--gold);}
+  .answer-box input:disabled{opacity:.6;}
+  .status-msg{margin-top:14px; font-size:14px; font-weight:700; color:var(--gold-bright);}
+  .status-msg.ok{color:var(--green);}
+
+  .guess-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:10px; width:100%; max-width:900px; margin-bottom:18px;}
+  .guess-item{background:var(--navy-card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; text-align:left;}
+  .guess-item.top1{border-color:var(--gold-bright); box-shadow:0 0 0 1px var(--gold-bright) inset;}
+  .guess-item.top2{border-color:var(--gold);}
+  .guess-item.top3{border-color:rgba(212,175,82,.5);}
+  .guess-item .gname{font-size:11.5px; font-weight:700; color:rgba(247,242,231,.75); display:block; margin-bottom:4px;}
+  .guess-item .gval{font-family:'Fraunces',serif; font-weight:700; font-size:17px;}
+  .guess-item .gpts{margin-top:4px; font-size:11px; font-weight:700; color:var(--gold-bright);}
+
+  .scoreboard-mini{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; width:100%; max-width:900px; margin-bottom:18px;}
+  .sb-pill{display:flex; align-items:center; gap:8px; background:var(--navy-card); border:1px solid var(--line); border-radius:999px; padding:6px 14px 6px 6px;}
+  .sb-pill .dot{width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-weight:600; font-size:11px; color:var(--navy-deep);}
+  .sb-pill .n{font-size:11px; font-weight:700;}
+  .sb-pill .s{font-family:'Fraunces',serif; font-size:14px; color:var(--gold-bright); font-weight:600; margin-left:4px;}
+
+  .controls-row{display:flex; gap:12px; margin-top:6px; width:100%; justify-content:center; flex-wrap:wrap;}
+  .ctrl{padding:13px 26px; border-radius:12px; font-family:'Manrope'; font-weight:700; font-size:14.5px; cursor:pointer; border:1px solid var(--line); background:transparent; color:var(--cream);}
+  .ctrl.primary{background:var(--gold); color:var(--navy-deep); border-color:var(--gold); font-weight:800;}
+  .ctrl:disabled{opacity:.35; cursor:not-allowed;}
+
+  .podium{display:flex; align-items:flex-end; gap:14px; justify-content:center; width:100%; margin:20px 0 8px;}
+  .pod{background:var(--navy-card); border:1px solid var(--line); border-top:3px solid var(--gold); border-radius:14px 14px 0 0; padding:20px 16px; text-align:center; flex:1; max-width:220px;}
+  .pod.first{border-top-color:var(--gold-bright); padding-top:34px; background:linear-gradient(180deg, rgba(234,200,115,.14), var(--navy-card));}
+  .pod .rank{font-family:'Fraunces', serif; font-size:13px; color:var(--gold-bright); font-weight:600; margin-bottom:6px;}
+  .pod .tname{font-weight:800; font-size:15px; margin-bottom:4px;}
+  .pod .tscore{font-family:'Fraunces', serif; font-size:26px; color:var(--gold-bright); font-weight:600;}
+</style>
+</head>
+<body>
+
+<main>
+
+  <!-- ROLE SELECT -->
+  <section class="screen active" id="screen-role">
+    <div class="eyebrow">Ice Breaking · Training Session</div>
+    <h1>Tebak Angka Live</h1>
+    <p class="lede">Semua peserta isi tebakan sendiri dari HP masing-masing, langsung sinkron.</p>
+    <div class="role-btns">
+      <div class="role-card" id="pickHost">
+        <div class="icon">🖥️</div>
+        <h3>Saya Fasilitator</h3>
+        <p>Layar ini ditampilkan di proyektor. Kontrol soal & lihat hasil di sini.</p>
+      </div>
+      <div class="role-card" id="pickPlayer">
+        <div class="icon">📱</div>
+        <h3>Saya Peserta</h3>
+        <p>Buka ini di HP kamu sendiri buat isi tebakan tiap ronde.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOST: LOBBY -->
+  <section class="screen" id="screen-host-lobby">
+    <div class="eyebrow">Layar Fasilitator</div>
+    <h1>Siapkan Sesi</h1>
+    <p class="lede">Bagikan link ini ke semua peserta — mereka buka sendiri di HP masing-masing lalu pilih "Saya Peserta".</p>
+    <div class="link-box" id="shareLink"></div>
+    <button class="big-btn" id="startSessionBtn" style="max-width:340px;">Mulai Sesi Baru</button>
+    <p class="joined-count" id="lobbyCount" style="margin-top:20px;">Menunggu peserta bergabung…</p>
+    <div class="joined-list" id="lobbyList"></div>
+    <button class="big-btn" id="beginQuestionsBtn" style="max-width:340px; margin-top:10px; display:none;">Mulai Pertanyaan</button>
+  </section>
+
+  <!-- HOST: GAME -->
+  <section class="screen" id="screen-host-game">
+    <div class="scoreboard-mini" id="hostScoreboard"></div>
+    <div class="qcounter" id="hostQCounter">Pertanyaan 1 / 8</div>
+    <div class="question-card">
+      <p id="hostQuestionText"></p>
+      <div class="unit" id="hostQuestionUnit"></div>
+    </div>
+    <p class="joined-count" id="hostAnsweredCount"></p>
+    <div class="guess-grid" id="hostGuessGrid"></div>
+    <div class="controls-row">
+      <button class="ctrl primary" id="hostRevealBtn">Tutup &amp; Lihat Hasil</button>
+      <button class="ctrl" id="hostNextBtn" disabled>Pertanyaan Berikutnya</button>
+      <button class="ctrl" id="hostFinishBtn">Selesai &amp; Lihat Skor</button>
+    </div>
+  </section>
+
+  <!-- HOST: FINAL -->
+  <section class="screen" id="screen-host-final">
+    <div class="eyebrow">Selesai!</div>
+    <h1>Tebak Angka Kelar</h1>
+    <div class="podium" id="hostPodium"></div>
+    <button class="ghost-btn" id="hostRestartBtn" style="margin-top:16px;">Mulai Sesi Baru</button>
+  </section>
+
+  <!-- PLAYER: JOIN -->
+  <section class="screen" id="screen-player-join">
+    <div class="eyebrow">Peserta</div>
+    <h1>Gabung Dulu</h1>
+    <p class="lede">Masukin nama kamu, terus tunggu fasilitator mulai soal pertama.</p>
+    <div class="setup-card">
+      <label>Nama kamu</label>
+      <input type="text" id="playerNameInput" placeholder="Nama..." maxlength="24">
+      <button class="big-btn" id="joinBtn">Gabung Sesi</button>
+    </div>
+  </section>
+
+  <!-- PLAYER: WAITING -->
+  <section class="screen" id="screen-player-waiting">
+    <div class="eyebrow">Sudah Gabung ✓</div>
+    <h1 id="playerWaitingName">Menunggu fasilitator…</h1>
+    <p class="lede">Layar utama bakal mulai soal sebentar lagi. Tetap di sini.</p>
+  </section>
+
+  <!-- PLAYER: GAME -->
+  <section class="screen" id="screen-player-game">
+    <div class="qcounter" id="playerQCounter">Pertanyaan 1 / 8</div>
+    <div class="question-card">
+      <p id="playerQuestionText"></p>
+      <div class="unit" id="playerQuestionUnit"></div>
+    </div>
+    <div class="answer-box">
+      <input type="number" inputmode="numeric" id="playerGuessInput" placeholder="Tebakanmu...">
+    </div>
+    <button class="big-btn" id="playerSubmitBtn" style="max-width:340px; margin-top:14px;">Kirim Tebakan</button>
+    <div class="status-msg" id="playerStatus"></div>
+  </section>
+
+  <!-- PLAYER: FINAL -->
+  <section class="screen" id="screen-player-final">
+    <div class="eyebrow">Selesai!</div>
+    <h1 id="playerFinalScore">Skormu: 0</h1>
+    <p class="lede">Makasih udah ikutan nebak. Lihat papan skor di layar utama ya!</p>
+  </section>
+
+</main>
+
+<div class="pillars"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+<script>
+// ---------- Firebase ----------
+const firebaseConfig = {
+  apiKey: "AIzaSyDu_zjoxj0hhSbJ2cM6BtbRzz7CgVUYY_Y",
+  authDomain: "tebak-angka-training.firebaseapp.com",
+  databaseURL: "https://tebak-angka-training-default-rtdb.firebaseio.com",
+  projectId: "tebak-angka-training",
+  storageBucket: "tebak-angka-training.firebasestorage.app",
+  messagingSenderId: "1022098538656",
+  appId: "1:1022098538656:web:59cfb256a492a51531c9c5"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ---------- Questions ----------
+const QUESTIONS = [
+  { q:'Berapa tinggi Monumen Nasional (Monas) di Jakarta?', unit:'meter', answer:132 },
+  { q:'RECEH — Konon cuma butuh berapa DETIK buat orang lain langsung nge-judge first impression kita?', unit:'detik', answer:7 },
+  { q:'Berapa kecepatan maksimum kereta cepat Whoosh Jakarta–Bandung?', unit:'km/jam', answer:350 },
+  { q:'RECEH — Rata-rata manusia ternyata menghabiskan berapa TAHUN dari total hidupnya cuma buat tidur?', unit:'tahun', answer:26 },
+  { q:'Ada berapa provinsi di Indonesia saat ini?', unit:'provinsi', answer:38 },
+  { q:'RECEH — Rata-rata orang ngecek HP-nya berapa KALI dalam sehari?', unit:'kali per hari', answer:96 },
+  { q:'Berapa jam durasi tidur yang disarankan untuk orang dewasa per malam?', unit:'jam', answer:8 },
+  { q:'RECEH — Rata-rata orang butuh nge-snooze alarm berapa KALI sebelum akhirnya beneran bangun?', unit:'kali', answer:3 },
+];
+const colors = ['#EAC873', '#E2725B', '#5FA579', '#8FA7D6', '#C48FD6', '#D68F9E', '#8FD6C0', '#D6C48F', '#8FA0D6', '#D68FB0', '#9ED68F', '#8FCFD6'];
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ---------- Role select ----------
+document.getElementById('pickHost').addEventListener('click', initHost);
+document.getElementById('pickPlayer').addEventListener('click', ()=>showScreen('screen-player-join'));
+
+// =========================================================
+// HOST
+// =========================================================
+function initHost(){
+  document.getElementById('shareLink').textContent = location.href;
+  showScreen('screen-host-lobby');
+
+  db.ref('participants').on('value', snap=>{
+    const val = snap.val() || {};
+    const names = Object.values(val).map(p=>p.name);
+    document.getElementById('lobbyList').innerHTML = names.map(n=>`<div class="joined-pill">${n}</div>`).join('');
+    document.getElementById('lobbyCount').textContent = names.length + ' peserta sudah gabung';
+    document.getElementById('beginQuestionsBtn').style.display = names.length > 0 ? 'block' : 'none';
+  });
+}
+
+document.getElementById('startSessionBtn').addEventListener('click', ()=>{
+  db.ref('participants').remove();
+  db.ref('guesses').remove();
+  db.ref('results').remove();
+  db.ref('session').set({ currentQuestion: -1, revealed: false, active: false, finished: false });
+});
+
+document.getElementById('beginQuestionsBtn').addEventListener('click', ()=>{
+  db.ref('session').update({ currentQuestion: 0, revealed: false, active: true, finished: false });
+  showScreen('screen-host-game');
+  loadHostQuestion(0);
+});
+
+let hostCurrentQ = 0;
+let hostParticipantsCache = {};
+
+db.ref('participants').on('value', snap=>{ hostParticipantsCache = snap.val() || {}; });
+
+function loadHostQuestion(qIndex){
+  hostCurrentQ = qIndex;
+  const q = QUESTIONS[qIndex];
+  document.getElementById('hostQCounter').textContent = `Pertanyaan ${qIndex+1} / ${QUESTIONS.length}`;
+  document.getElementById('hostQuestionText').textContent = q.q;
+  document.getElementById('hostQuestionUnit').textContent = 'Jawab dalam: ' + q.unit;
+  document.getElementById('hostGuessGrid').innerHTML = '';
+  document.getElementById('hostRevealBtn').disabled = false;
+  document.getElementById('hostNextBtn').disabled = true;
+  renderHostScoreboard();
+
+  db.ref('guesses/' + qIndex).off();
+  db.ref('guesses/' + qIndex).on('value', snap=>{
+    const val = snap.val() || {};
+    const count = Object.keys(val).length;
+    const total = Object.keys(hostParticipantsCache).length;
+    document.getElementById('hostAnsweredCount').textContent = `${count} / ${total} peserta sudah jawab`;
+  });
+}
+
+function renderHostScoreboard(){
+  const entries = Object.entries(hostParticipantsCache);
+  const max = Math.max(0, ...entries.map(([,p])=>p.score||0));
+  document.getElementById('hostScoreboard').innerHTML = entries.map(([id,p],i)=>{
+    const color = colors[i % colors.length];
+    return `<div class="sb-pill"><div class="dot" style="background:${color}">${(p.name||'?').charAt(0).toUpperCase()}</div><span class="n">${p.name}</span><span class="s">${p.score||0}</span></div>`;
+  }).join('');
+}
+
+document.getElementById('hostRevealBtn').addEventListener('click', async ()=>{
+  const q = QUESTIONS[hostCurrentQ];
+  const snap = await db.ref('guesses/' + hostCurrentQ).once('value');
+  const guesses = snap.val() || {};
+  const scored = Object.entries(guesses).map(([id,val])=>({
+    id, val, diff: Math.abs(val - q.answer)
+  })).sort((a,b)=>a.diff-b.diff);
+
+  const pointsByRank = [10, 6, 3];
+  let rank = 0, prevDiff = null;
+  const results = {};
+  scored.forEach((g, idx)=>{
+    if(prevDiff === null || g.diff !== prevDiff) rank = idx;
+    prevDiff = g.diff;
+    const pts = rank < 3 ? pointsByRank[rank] : 0;
+    results[g.id] = { value: g.val, diff: g.diff, points: pts, rank: rank+1 };
+  });
+
+  const updates = {};
+  Object.entries(results).forEach(([id, r])=>{
+    updates['results/' + hostCurrentQ + '/' + id] = r;
+    const curScore = (hostParticipantsCache[id] && hostParticipantsCache[id].score) || 0;
+    updates['participants/' + id + '/score'] = curScore + r.points;
+  });
+  await db.ref().update(updates);
+  await db.ref('session/revealed').set(true);
+
+  renderHostGuessGrid(results, q);
+  document.getElementById('hostRevealBtn').disabled = true;
+  document.getElementById('hostNextBtn').disabled = false;
+});
+
+function renderHostGuessGrid(results, q){
+  const grid = document.getElementById('hostGuessGrid');
+  const rows = Object.entries(results).map(([id, r])=>({id, ...r, name: (hostParticipantsCache[id]||{}).name || '?'}));
+  rows.sort((a,b)=>a.diff-b.diff);
+  grid.innerHTML = `<div class="guess-item" style="grid-column:1/-1; text-align:center; border:none; background:transparent;"><b>Jawaban asli: ${q.answer} ${q.unit}</b></div>` +
+    rows.map(r=>{
+      const cls = r.points===10?'top1':r.points===6?'top2':r.points===3?'top3':'';
+      return `<div class="guess-item ${cls}"><span class="gname">${r.name}</span><span class="gval">${r.value}</span>${r.points>0?`<div class="gpts">+${r.points} poin</div>`:''}</div>`;
+    }).join('');
+  renderHostScoreboard();
+}
+
+document.getElementById('hostNextBtn').addEventListener('click', ()=>{
+  const next = hostCurrentQ + 1;
+  if(next >= QUESTIONS.length){
+    finishHost();
+  } else {
+    db.ref('session').update({ currentQuestion: next, revealed: false });
+    loadHostQuestion(next);
+  }
+});
+
+document.getElementById('hostFinishBtn').addEventListener('click', finishHost);
+
+function finishHost(){
+  db.ref('session').update({ finished: true, active: false });
+  const entries = Object.entries(hostParticipantsCache).map(([id,p])=>({id, name:p.name, score:p.score||0}));
+  entries.sort((a,b)=>b.score-a.score);
+  const podium = document.getElementById('hostPodium');
+  const order = entries.length >= 3 ? [1,0,2] : entries.map((_,i)=>i);
+  podium.innerHTML = order.map(idx=>{
+    if(!entries[idx]) return '';
+    const t = entries[idx];
+    const rankLabel = idx===0?'Juara 1':idx===1?'Juara 2':'Juara 3';
+    return `<div class="pod${idx===0?' first':''}"><div class="rank">${rankLabel}</div><div class="tname">${t.name}</div><div class="tscore">${t.score}</div></div>`;
+  }).join('');
+  showScreen('screen-host-final');
+}
+
+document.getElementById('hostRestartBtn').addEventListener('click', ()=>{
+  document.getElementById('startSessionBtn').click();
+  showScreen('screen-host-lobby');
+});
+
+// =========================================================
+// PLAYER
+// =========================================================
+let myId = localStorage.getItem('tebakAngkaPlayerId');
+let myName = localStorage.getItem('tebakAngkaPlayerName');
+let playerLastQ = -1;
+let playerSubmittedQ = -1;
+
+document.getElementById('joinBtn').addEventListener('click', async ()=>{
+  const nameInput = document.getElementById('playerNameInput');
+  const name = nameInput.value.trim();
+  if(!name) { nameInput.focus(); return; }
+  myName = name;
+
+  if(!myId){
+    myId = db.ref('participants').push().key;
+    localStorage.setItem('tebakAngkaPlayerId', myId);
+  }
+  localStorage.setItem('tebakAngkaPlayerName', myName);
+
+  const existing = await db.ref('participants/' + myId).once('value');
+  if(!existing.exists()){
+    await db.ref('participants/' + myId).set({ name: myName, score: 0 });
+  } else {
+    await db.ref('participants/' + myId).update({ name: myName });
+  }
+
+  startPlayerListening();
+});
+
+function startPlayerListening(){
+  showScreen('screen-player-waiting');
+  document.getElementById('playerWaitingName').textContent = 'Halo, ' + myName + '!';
+
+  db.ref('session').on('value', snap=>{
+    const s = snap.val();
+    if(!s){ return; }
+    if(s.finished){
+      showPlayerFinal();
+      return;
+    }
+    if(!s.active){
+      showScreen('screen-player-waiting');
+      return;
+    }
+    if(s.currentQuestion !== playerLastQ){
+      playerLastQ = s.currentQuestion;
+      playerSubmittedQ = -1;
+      loadPlayerQuestion(s.currentQuestion);
+    }
+    if(s.revealed){
+      showPlayerRoundResult(s.currentQuestion);
+    }
+  });
+}
+
+function loadPlayerQuestion(qIndex){
+  const q = QUESTIONS[qIndex];
+  document.getElementById('playerQCounter').textContent = `Pertanyaan ${qIndex+1} / ${QUESTIONS.length}`;
+  document.getElementById('playerQuestionText').textContent = q.q;
+  document.getElementById('playerQuestionUnit').textContent = 'Jawab dalam: ' + q.unit;
+  document.getElementById('playerGuessInput').value = '';
+  document.getElementById('playerGuessInput').disabled = false;
+  document.getElementById('playerSubmitBtn').disabled = false;
+  document.getElementById('playerSubmitBtn').textContent = 'Kirim Tebakan';
+  document.getElementById('playerStatus').textContent = '';
+  document.getElementById('playerStatus').className = 'status-msg';
+  showScreen('screen-player-game');
+}
+
+document.getElementById('playerSubmitBtn').addEventListener('click', async ()=>{
+  const input = document.getElementById('playerGuessInput');
+  const val = parseFloat(input.value);
+  if(isNaN(val)) { input.focus(); return; }
+  await db.ref('guesses/' + playerLastQ + '/' + myId).set(val);
+  playerSubmittedQ = playerLastQ;
+  input.disabled = true;
+  document.getElementById('playerSubmitBtn').disabled = true;
+  document.getElementById('playerSubmitBtn').textContent = 'Terkirim ✓';
+  document.getElementById('playerStatus').textContent = 'Menunggu peserta lain & hasil dari fasilitator…';
+});
+
+function showPlayerRoundResult(qIndex){
+  db.ref('results/' + qIndex + '/' + myId).once('value').then(snap=>{
+    const r = snap.val();
+    const statusEl = document.getElementById('playerStatus');
+    if(r){
+      statusEl.textContent = r.points > 0
+        ? `Selisih ${r.diff} — dapat +${r.points} poin! 🎉`
+        : `Selisih ${r.diff} — belum dapat poin ronde ini.`;
+      statusEl.className = 'status-msg ' + (r.points>0 ? 'ok' : '');
+    } else {
+      statusEl.textContent = 'Kamu tidak sempat jawab ronde ini.';
+    }
+    document.getElementById('playerGuessInput').disabled = true;
+    document.getElementById('playerSubmitBtn').disabled = true;
+  });
+}
+
+function showPlayerFinal(){
+  db.ref('participants/' + myId + '/score').once('value').then(snap=>{
+    document.getElementById('playerFinalScore').textContent = 'Skormu: ' + (snap.val() || 0);
+    showScreen('screen-player-final');
+  });
+}
+</script>
+</body>
+</html>
