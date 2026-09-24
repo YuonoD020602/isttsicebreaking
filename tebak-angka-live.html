@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root{
     --navy-deep:#0A1830;
@@ -68,6 +69,9 @@
   .ghost-btn{background:transparent; border:1px solid var(--line); color:var(--cream); padding:12px 20px; border-radius:12px; font-family:'Manrope'; font-weight:700; font-size:13.5px; cursor:pointer;}
 
   .link-box{background:var(--navy); border:1px solid var(--line); border-radius:10px; padding:12px 14px; font-size:13px; word-break:break-all; margin:14px 0; width:100%; max-width:520px;}
+  .qr-wrap{background:var(--cream); border-radius:16px; padding:16px; display:inline-flex; margin:10px 0 4px;}
+  .qr-wrap canvas{display:block;}
+  .qr-caption{font-size:12.5px; color:rgba(247,242,231,.65); margin-bottom:4px;}
 
   .joined-list{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; width:100%; max-width:700px; margin:16px 0;}
   .joined-pill{background:var(--navy-card); border:1px solid var(--line); border-radius:999px; padding:7px 16px; font-size:13px; font-weight:700;}
@@ -140,7 +144,8 @@
   <section class="screen" id="screen-host-lobby">
     <div class="eyebrow">Layar Fasilitator</div>
     <h1>Siapkan Sesi</h1>
-    <p class="lede">Bagikan link ini ke semua peserta — mereka buka sendiri di HP masing-masing lalu pilih "Saya Peserta".</p>
+    <p class="lede">Suruh peserta scan QR ini dari HP masing-masing, atau bagikan link di bawahnya, lalu pilih "Saya Peserta".</p>
+    <div class="qr-wrap"><div id="qrCanvas"></div></div>
     <div class="link-box" id="shareLink"></div>
     <button class="big-btn" id="startSessionBtn" style="max-width:340px;">Mulai Sesi Baru</button>
     <p class="joined-count" id="lobbyCount" style="margin-top:20px;">Menunggu peserta bergabung…</p>
@@ -259,6 +264,11 @@ document.getElementById('pickPlayer').addEventListener('click', ()=>showScreen('
 function initHost(){
   document.getElementById('shareLink').textContent = location.href;
   showScreen('screen-host-lobby');
+  const qrEl = document.getElementById('qrCanvas');
+  if(window.QRCode && qrEl){
+    qrEl.innerHTML = '';
+    new QRCode(qrEl, { text: location.href, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
+  }
 
   db.ref('participants').on('value', snap=>{
     const val = snap.val() || {};
